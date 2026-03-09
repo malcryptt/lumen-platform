@@ -1,7 +1,5 @@
-/**
- * Render Blueprint Specification
- * This file allows one-click deployment of the entire Lumen stack on Render.
- */
+# Render Blueprint Specification
+# This file allows one-click deployment of the entire Lumen stack on Render.
 services:
   # Web IDE Execution Backend
   - type: web
