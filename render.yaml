@@ -1,0 +1,47 @@
+/**
+ * Render Blueprint Specification
+ * This file allows one-click deployment of the entire Lumen stack on Render.
+ */
+services:
+  # Web IDE Execution Backend
+  - type: web
+    name: lumen-ide-backend
+    env: docker
+    dockerContext: ./web-ide-backend
+    dockerFilePath: ./web-ide-backend/Dockerfile
+    plan: standard # Required for Docker with disk or high resource
+    envVars:
+      - key: PORT
+        value: 3001
+
+  # Package Registry Backend
+  - type: web
+    name: lumen-registry
+    env: docker
+    dockerContext: ./registry-backend
+    dockerFilePath: ./registry-backend/Dockerfile
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: lumen-db
+          property: connectionString
+
+  # Frontend Website (Next.js)
+  - type: web
+    name: lumen-website
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    rootDir: website
+    envVars:
+      - key: NEXT_PUBLIC_BACKEND_URL
+        fromService:
+          name: lumen-ide-backend
+          type: web
+          property: host
+        # Note: Render usually uses https, so we might need a wss:// prefix adjustment in code
+        # or manual override in Render dashboard.
+
+databases:
+  - name: lumen-db
+    plan: free

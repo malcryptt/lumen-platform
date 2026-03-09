@@ -1,9 +1,16 @@
 # Deployment Guide: Lumen Platform
 
-To deploy the Lumen Platform, we recommend a hybrid approach. While the main website is Vercel-native, the execution backend requires container support.
+The Lumen Platform can be deployed to Vercel (Frontend), Render (Full Stack), or any VPS (Docker).
 
-## 1. Frontend: Website (Vercel)
+## 1. Cloud Platforms
 
+### Render (Recommended for Full Stack)
+Lumen includes a `render.yaml` blueprint. To deploy everything (Website, IDE Backend, Registry, and DB) at once:
+1. Create a new **Blueprint** on your Render dashboard.
+2. Connect your GitHub repository.
+3. Render will automatically detect `render.yaml` and provision all services.
+
+### Vercel (Frontend Only)
 The `website/` directory is a standard Next.js application.
 
 ### Automatic Deployment (Recommended)
