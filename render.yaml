@@ -4,9 +4,9 @@ services:
   # Web IDE Execution Backend
   - type: web
     name: lumen-ide-backend
-    env: docker
+    runtime: docker
     dockerContext: ./web-ide-backend
-    dockerFilePath: ./web-ide-backend/Dockerfile
+    dockerfile: Dockerfile
     plan: standard # Required for Docker with disk or high resource
     envVars:
       - key: PORT
@@ -15,9 +15,9 @@ services:
   # Package Registry Backend
   - type: web
     name: lumen-registry
-    env: docker
+    runtime: docker
     dockerContext: ./registry-backend
-    dockerFilePath: ./registry-backend/Dockerfile
+    dockerfile: Dockerfile
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -27,7 +27,7 @@ services:
   # Frontend Website (Next.js)
   - type: web
     name: lumen-website
-    env: node
+    runtime: node
     buildCommand: npm install && npm run build
     startCommand: npm run start
     rootDir: website
