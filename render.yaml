@@ -6,7 +6,7 @@ services:
     name: lumen-ide-backend
     runtime: docker
     dockerContext: ./web-ide-backend
-    dockerfile: Dockerfile
+    dockerfilePath: ./web-ide-backend/Dockerfile
     plan: standard # Required for Docker with disk or high resource
     envVars:
       - key: PORT
@@ -17,7 +17,7 @@ services:
     name: lumen-registry
     runtime: docker
     dockerContext: ./registry-backend
-    dockerfile: Dockerfile
+    dockerfilePath: ./registry-backend/Dockerfile
     envVars:
       - key: DATABASE_URL
         fromDatabase:
