@@ -1,0 +1,37 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Package {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  description String?
+  owner       String    // GitHub username or ID
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  versions    Version[]
+}
+
+model Version {
+  id        String   @id @default(uuid())
+  version   String   // semver
+  packageId String
+  package   Package  @relation(fields: [packageId], references: [id])
+  tarball   String   // S3 URL
+  checksum  String   // SHA-256
+  createdAt DateTime @default(now())
+
+  @@unique([packageId, version])
+}
+
+model User {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  apiKey    String   @unique
+  createdAt DateTime @default(now())
+}
