@@ -13,15 +13,16 @@ The `website/` directory is a standard Next.js application.
 4. Add the following **Environment Variables**:
    - `NEXT_PUBLIC_BACKEND_URL`: The URL of your deployed execution backend (see below).
 
-### CLI Deployment
+### Deployment via Docker Compose (Simplest for VPS)
+If you are deploying to a VPS (DigitalOcean, AWS, etc.), use the provided `docker-compose.yml` to bring up all backend services (IDE, Registry, and Database) at once:
+
 ```bash
-cd website
-npx vercel --prod
+docker-compose up -d
 ```
 
 ---
 
-## 2. Backend: Execution Sandbox (Railway/VPS)
+## 2. Backend: Service Details
 
 The `web-ide-backend` requires Docker to manage sandboxed execution. **Vercel does not support this natively.**
 

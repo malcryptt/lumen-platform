@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  # Web IDE Execution Backend
+  ide-backend:
+    build: ./web-ide-backend
+    ports:
+      - "3001:3001"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - PORT=3001
+    restart: always
+
+  # Package Registry Backend
+  registry-backend:
+    build: ./registry-backend
+    ports:
+      - "3002:3002"
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgresql://lumen:lumen@db:5432/lumen_registry?schema=public
+    restart: always
+
+  # Database for Registry
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_USER=lumen
+      - POSTGRES_PASSWORD=lumen
+      - POSTGRES_DB=lumen_registry
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
