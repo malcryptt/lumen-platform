@@ -10,6 +10,14 @@ Lumen includes a `render.yaml` blueprint. To deploy everything (Website, IDE Bac
 2. Connect your GitHub repository.
 3. Render will automatically detect `render.yaml` and provision all services.
 
+### Alternative: Manual Docker Deployment (No GitHub Link)
+If you cannot link your GitHub account (e.g., restricted access), you can deploy via pre-built Docker images:
+1. Run `./deploy-render.sh` to build and push images to your Docker registry (e.g., Docker Hub).
+2. On Render, click **New +** -> **Web Service**.
+3. Select **Deploy an existing image**.
+4. Use your image name (e.g., `user/lumen-ide-backend:latest`).
+5. Provision a **PostgreSQL** database on Render and set `DATABASE_URL` for the registry.
+
 ### Vercel (Frontend Only)
 The `website/` directory is a standard Next.js application.
 
