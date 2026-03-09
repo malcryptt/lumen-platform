@@ -1,0 +1,36 @@
+# Build and Binary
+build/
+bin/
+out/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+lumen-cli/lumen
+lumen-cli/CMakeFiles/
+lumen-cli/cmake_install.cmake
+lumen-cli/Makefile
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.next/
+dist/
+.vscode-test/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project-specific
+.lumen/
+.lumen_history
+history
+vscode-extension/out/
+web-ide-backend/lumen
+web-ide-backend/node_modules/
+website/node_modules/
+website/.next/
+website/out/

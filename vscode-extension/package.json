@@ -1,0 +1,100 @@
+{
+  "name": "lumen-lang",
+  "displayName": "Lumen",
+  "description": "Lumen language support: syntax highlighting, LSP, and debugging.",
+  "version": "0.1.0",
+  "publisher": "mal4crypt",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "lumen",
+        "aliases": [
+          "Lumen",
+          "lumen"
+        ],
+        "extensions": [
+          ".lm"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "lumen",
+        "scopeName": "source.lumen",
+        "path": "./syntaxes/lumen.tmLanguage.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "lumen.restartLsp",
+        "title": "Lumen: Restart LSP Server"
+      },
+      {
+        "command": "lumen.runFile",
+        "title": "Lumen: Run Current File"
+      }
+    ],
+    "debuggers": [
+      {
+        "type": "lumen",
+        "label": "Lumen Debugger",
+        "configurationAttributes": {
+          "launch": {
+            "required": [
+              "program"
+            ],
+            "properties": {
+              "program": {
+                "type": "string",
+                "description": "The program to debug.",
+                "default": "${file}"
+              },
+              "stopOnEntry": {
+                "type": "boolean",
+                "description": "Stop on entry.",
+                "default": true
+              }
+            }
+          }
+        },
+        "initialConfigurations": [
+          {
+            "type": "lumen",
+            "request": "launch",
+            "name": "Lumen: Launch current file",
+            "program": "${file}",
+            "stopOnEntry": true
+          }
+        ]
+      }
+    ],
+    "snippets": [
+      {
+        "language": "lumen",
+        "path": "./snippets/lumen.json"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/node": "18.x",
+    "@types/vscode": "^1.80.0",
+    "typescript": "^5.1.3"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1"
+  }
+}

@@ -1,0 +1,90 @@
+{
+    "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+    "name": "Lumen",
+    "patterns": [
+        {
+            "include": "#comments"
+        },
+        {
+            "include": "#strings"
+        },
+        {
+            "include": "#keywords"
+        },
+        {
+            "include": "#types"
+        },
+        {
+            "include": "#constants"
+        }
+    ],
+    "repository": {
+        "keywords": {
+            "patterns": [
+                {
+                    "name": "keyword.control.lumen",
+                    "match": "\\b(fn|let|val|const|class|if|for|while|return|import|export|async|await|yield|match|with|defer|guard|raise|try|catch|finally)\\b"
+                }
+            ]
+        },
+        "types": {
+            "patterns": [
+                {
+                    "name": "support.type.lumen",
+                    "match": "\\b(Int|Float|String|Bool|List|Map|bytes|Result|Option)\\b"
+                }
+            ]
+        },
+        "strings": {
+            "patterns": [
+                {
+                    "name": "string.quoted.double.lumen",
+                    "begin": "\"",
+                    "end": "\"",
+                    "patterns": [
+                        {
+                            "name": "constant.character.escape.lumen",
+                            "match": "\\\\."
+                        },
+                        {
+                            "name": "variable.other.interpolation.lumen",
+                            "begin": "\\{",
+                            "end": "\\}",
+                            "patterns": [
+                                {
+                                    "include": "source.lumen"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        "comments": {
+            "patterns": [
+                {
+                    "name": "comment.line.double-dash.lumen",
+                    "match": "--.*$"
+                },
+                {
+                    "name": "comment.block.lumen",
+                    "begin": "--\\[\\[",
+                    "end": "\\]\\]"
+                }
+            ]
+        },
+        "constants": {
+            "patterns": [
+                {
+                    "name": "constant.language.boolean.lumen",
+                    "match": "\\b(true|false)\\b"
+                },
+                {
+                    "name": "constant.numeric.lumen",
+                    "match": "\\b[0-9]+(\\.[0-9]+)?\\b"
+                }
+            ]
+        }
+    },
+    "scopeName": "source.lumen"
+}
