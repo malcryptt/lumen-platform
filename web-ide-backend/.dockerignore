@@ -1,0 +1,10 @@
+node_modules
+dist
+build
+.git
+*.log
+npm-debug.log*
+.github
+.vscode
+*.lm
+lumen.lock

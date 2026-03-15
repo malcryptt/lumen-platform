@@ -1,8 +1,10 @@
-import Fastify from 'fastify';
+import Fastify, { FastifyRequest, FastifyReply } from 'fastify';
 import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
+import { createRequire } from 'module';
 
+const require = createRequire(import.meta.url);
 const fastify = Fastify({ logger: true });
 const prisma = new PrismaClient();
 
@@ -27,7 +29,7 @@ fastify.get('/packages', async () => {
 });
 
 // Get package details
-fastify.get('/packages/:name', async (request, reply) => {
+fastify.get('/packages/:name', async (request: FastifyRequest, reply: FastifyReply) => {
     const { name } = request.params as { name: string };
     const pkg = await prisma.package.findUnique({
         where: { name },
@@ -39,7 +41,7 @@ fastify.get('/packages/:name', async (request, reply) => {
 });
 
 // Publish a package
-fastify.post('/packages/publish', async (request, reply) => {
+fastify.post('/packages/publish', async (request: FastifyRequest, reply: FastifyReply) => {
     const result = PublishSchema.safeParse(request.body);
     if (!result.success) {
         return reply.code(400).send({ error: 'Invalid publish data', details: result.error });

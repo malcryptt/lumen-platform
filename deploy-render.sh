@@ -1,35 +1,26 @@
 #!/bin/bash
+set -e
 
-# Manual Deployment Script for Render (Lumen Platform)
-# Use this when GitHub repository linking is not possible.
+# Optimized Manual Deployment Script for Render
+echo "── Starting Optimized Lumen Backend Deployment ──"
+echo "Note: Using node:20-slim to save your data usage! 📉"
 
-# 1. Login to Render Container Registry (if applicable) or use Docker Hub
-# Render supports pulling images from any public/private registry.
+USERNAME="mal4crypt"
 
-REGISTRY_URL="docker.io" # Default to Docker Hub
-USERNAME="your-docker-username"
-
-echo "── Deploying Lumen Platform via Docker ──"
-
-# Build and Push IDE Backend
-echo "Building IDE Backend..."
-docker build -t $USERNAME/lumen-ide-backend:latest ./web-ide-backend
+# 1. IDE Backend
+echo "📦 Building & Pushing IDE Backend..."
+cd web-ide-backend
+docker build -t $USERNAME/lumen-ide-backend:latest .
 docker push $USERNAME/lumen-ide-backend:latest
+cd ..
 
-# Build and Push Registry Backend
-echo "Building Registry Backend..."
-docker build -t $USERNAME/lumen-registry:latest ./registry-backend
+# 2. Registry Backend
+echo "📦 Building & Pushing Registry Backend..."
+cd registry-backend
+docker build -t $USERNAME/lumen-registry:latest .
 docker push $USERNAME/lumen-registry:latest
+cd ..
 
-# Build and Push Website
-# Note: Next.js needs a specialized Dockerfile for production standalone builds
-echo "Building Website..."
-docker build -t $USERNAME/lumen-website:latest -f ./website/Dockerfile ./website
-docker push $USERNAME/lumen-website:latest
-
-echo "── Push Complete! ──"
-echo "Instructions:"
-echo "1. Go to Render Dashboard -> New + -> Web Service"
-echo "2. Select 'Existing Image' and enter $USERNAME/lumen-ide-backend:latest"
-echo "3. Repeat for Registry and Website."
-echo "4. Remember to set environment variables (DATABASE_URL, NEXT_PUBLIC_BACKEND_URL)."
+echo "✅ All Backend Images Pushed! 🎆"
+echo "Next Step: You are 100% done with the terminal. Just go to Render and click 'Deploy latest reference' for both services."
+"

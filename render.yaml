@@ -5,17 +5,21 @@ services:
   - type: web
     name: lumen-ide-backend
     runtime: docker
+    region: ohio # Change as needed
     dockerContext: ./web-ide-backend
     dockerfilePath: ./web-ide-backend/Dockerfile
-    plan: standard # Required for Docker with disk or high resource
+    plan: standard
     envVars:
       - key: PORT
         value: 3001
+      - key: NODE_ENV
+        value: production
 
   # Package Registry Backend
   - type: web
     name: lumen-registry
     runtime: docker
+    region: ohio
     dockerContext: ./registry-backend
     dockerfilePath: ./registry-backend/Dockerfile
     envVars:
@@ -23,11 +27,15 @@ services:
         fromDatabase:
           name: lumen-db
           property: connectionString
+      - key: NODE_ENV
+        value: production
 
   # Frontend Website (Next.js)
+  # Deployed on Vercel is better, but here's the Render backup config
   - type: web
     name: lumen-website
     runtime: node
+    region: ohio
     buildCommand: npm install && npm run build
     startCommand: npm run start
     rootDir: website

@@ -1,18 +1,34 @@
-FROM ubuntu:22.04
+FROM node:20-slim
 
-RUN apt-get update && apt-get install -y \
-    curl \
-    build-essential \
+# Install minimal runtime dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Lumen (Mock)
-RUN mkdir -p /usr/local/bin
-COPY ./lumen /usr/local/bin/lumen
-RUN chmod +x /usr/local/bin/lumen
+WORKDIR /app
+
+# Copy package files and install dependencies
+COPY package*.json ./
+RUN npm install
+
+# Copy source code and binary
+# .dockerignore handles excluding node_modules, .git, etc.
+COPY . .
+
+# Build the TypeScript project
+RUN npm run build
+
+# Remove devDependencies to keep the image slim
+RUN npm prune --production
+
+RUN chmod +x ./lumen && mv ./lumen /usr/local/bin/lumen
+
+# Expose the API port
+EXPOSE 3001
 
 # Security: Run as non-root
-RUN useradd -m lumen
+RUN useradd -m lumen && chown -R lumen:lumen /app
 USER lumen
-WORKDIR /home/lumen
 
-CMD ["lumen", "shell"]
+# Start the compiled server
+CMD ["node", "dist/server.js"]
