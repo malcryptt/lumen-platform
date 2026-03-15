@@ -4,8 +4,9 @@ import { PrismaClient } from '@prisma/client';
 import Docker from 'dockerode';
 import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
-import { createRequire } from 'module';
-import { Buffer } from 'buffer';
+import { createRequire } from 'node:module';
+import { Buffer } from 'node:buffer';
+import process from 'node:process';
 
 const require = createRequire(import.meta.url);
 const fastify = Fastify({ logger: true });
