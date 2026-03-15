@@ -4,11 +4,11 @@ services:
   # Web IDE Execution Backend
   - type: web
     name: lumen-ide-backend
-    runtime: docker
-    region: ohio # Change as needed
-    dockerContext: ./web-ide-backend
-    dockerfilePath: ./web-ide-backend/Dockerfile
-    plan: standard
+    runtime: node
+    plan: free # Switch to Free Tier
+    buildCommand: npm install && npm run build
+    startCommand: node dist/server.js
+    rootDir: web-ide-backend
     envVars:
       - key: PORT
         value: 3001
@@ -18,10 +18,11 @@ services:
   # Package Registry Backend
   - type: web
     name: lumen-registry
-    runtime: docker
-    region: ohio
-    dockerContext: ./registry-backend
-    dockerfilePath: ./registry-backend/Dockerfile
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: node dist/server.js
+    rootDir: registry-backend
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -36,6 +37,7 @@ services:
     name: lumen-website
     runtime: node
     region: ohio
+    plan: free
     buildCommand: npm install && npm run build
     startCommand: npm run start
     rootDir: website
@@ -45,8 +47,6 @@ services:
           name: lumen-ide-backend
           type: web
           property: host
-        # Note: Render usually uses https, so we might need a wss:// prefix adjustment in code
-        # or manual override in Render dashboard.
 
 databases:
   - name: lumen-db
