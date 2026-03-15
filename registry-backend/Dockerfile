@@ -1,28 +1,27 @@
-FROM node:20-slim
+# Stage 1: Build
+FROM node:20-slim AS builder
 
-# Install OpenSSL (required by Prisma)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    openssl \
-    ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
-
+RUN apt-get update && apt-get install -y openssl ca-certificates && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 
-# Copy package files and prisma schema first
 COPY package*.json ./
 COPY prisma ./prisma/
-
-# Install dependencies (triggers prisma generate)
 RUN npm install
 
-# Copy remaining source code
 COPY . .
-
-# Build the TypeScript project
 RUN npm run build
 
-# Remove devDependencies
-RUN npm prune --production
+# Stage 2: Runtime
+FROM node:20-slim AS runtime
+
+RUN apt-get update && apt-get install -y openssl ca-certificates && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+
+# Only copy what's needed to run
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/prisma ./prisma
 
 EXPOSE 3002
 
