@@ -1,29 +1,17 @@
 # Render Blueprint Specification
 # This file allows one-click deployment of the entire Lumen stack on Render.
 services:
-  # Web IDE Execution Backend
+  # Unified Lumen Backend (IDE + Registry)
   - type: web
-    name: lumen-ide-backend
-    runtime: node
-    plan: free # Switch to Free Tier
-    buildCommand: npm install && npm run build
-    startCommand: node dist/server.js
-    rootDir: web-ide-backend
-    envVars:
-      - key: PORT
-        value: 3001
-      - key: NODE_ENV
-        value: production
-
-  # Package Registry Backend
-  - type: web
-    name: lumen-registry
+    name: lumen-backend
     runtime: node
     plan: free
     buildCommand: npm install && npm run build
     startCommand: node dist/server.js
-    rootDir: registry-backend
+    rootDir: backend
     envVars:
+      - key: PORT
+        value: 3001
       - key: DATABASE_URL
         fromDatabase:
           name: lumen-db
@@ -44,7 +32,7 @@ services:
     envVars:
       - key: NEXT_PUBLIC_BACKEND_URL
         fromService:
-          name: lumen-ide-backend
+          name: lumen-backend
           type: web
           property: host
 

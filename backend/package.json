@@ -1,0 +1,28 @@
+{
+    "name": "lumen-unified-backend",
+    "version": "1.0.0",
+    "type": "module",
+    "scripts": {
+        "dev": "ts-node src/server.ts",
+        "build": "tsc",
+        "start": "node dist/server.js",
+        "postinstall": "prisma generate && chmod +x ./lumen"
+    },
+    "dependencies": {
+        "fastify": "^4.21.0",
+        "@fastify/websocket": "^8.2.0",
+        "@prisma/client": "^5.0.0",
+        "zod": "^3.21.4",
+        "uuid": "^9.0.0",
+        "dockerode": "^4.0.0",
+        "fluent-json-schema": "^4.2.1"
+    },
+    "devDependencies": {
+        "@types/node": "^20.5.0",
+        "@types/uuid": "^9.0.2",
+        "@types/dockerode": "^3.3.19",
+        "prisma": "^5.0.0",
+        "ts-node": "^10.9.1",
+        "typescript": "^5.1.6"
+    }
+}
