@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { createRequire } from 'node:module';
 import { Buffer } from 'node:buffer';
 import process from 'node:process';
+import { exec } from 'node:child_process';
 
 const require = createRequire(import.meta.url);
 const fastify = Fastify({ logger: true });
@@ -110,17 +111,16 @@ fastify.register(async (instance: FastifyInstance) => {
                         await container.remove();
                     } else {
                         // Fallback to local 'lumen' binary execution
-                        const { exec } = require('child_process');
                         // Use the bundled 'lumen' binary in the backend root
                         const processExec = exec(`./lumen run -e "${code.replace(/"/g, '\\"')}"`, {
                             timeout: 5000,
                             maxBuffer: 1024 * 1024
                         });
 
-                        processExec.stdout.on('data', (data: any) => {
+                        processExec.stdout?.on('data', (data: any) => {
                             connection.socket.send(JSON.stringify({ type: 'output', data: data.toString() }));
                         });
-                        processExec.stderr.on('data', (data: any) => {
+                        processExec.stderr?.on('data', (data: any) => {
                             connection.socket.send(JSON.stringify({ type: 'output', data: data.toString() }));
                         });
                         processExec.on('close', (code: number) => {

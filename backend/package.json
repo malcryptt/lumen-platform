@@ -2,11 +2,14 @@
     "name": "lumen-unified-backend",
     "version": "1.0.0",
     "type": "module",
+    "engines": {
+        "node": ">=20.0.0"
+    },
     "scripts": {
         "dev": "ts-node src/server.ts",
         "build": "tsc",
         "start": "node dist/server.js",
-        "postinstall": "prisma generate && chmod +x ./lumen"
+        "postinstall": "node -v && prisma generate && (chmod +x ./lumen || true)"
     },
     "dependencies": {
         "fastify": "^4.21.0",
