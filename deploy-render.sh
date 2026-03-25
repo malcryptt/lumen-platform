@@ -1,26 +1,27 @@
 #!/bin/bash
 set -e
 
-# Optimized Manual Deployment Script for Render
-echo "── Starting Optimized Lumen Backend Deployment ──"
-echo "Note: Using node:20-slim to save your data usage! 📉"
+# Hardened Manual Deployment Script for Unified Lumen Backend
+# This script bypasses GitHub-to-Render issues by building locally and pushing to Docker Hub.
 
+echo "── Starting Hardened Unified Lumen Backend Deployment ──"
+echo "Note: Using local Docker build to bypass the 'flagged account' cloning issue. 🚀"
+
+# Make sure this matches your Docker Hub username
 USERNAME="mal4crypt"
+IMAGE_NAME="lumen-unified-backend"
 
-# 1. IDE Backend
-echo "📦 Building & Pushing IDE Backend..."
-cd web-ide-backend
-docker build -t $USERNAME/lumen-ide-backend:latest .
-docker push $USERNAME/lumen-ide-backend:latest
+# 1. Unified Backend
+echo "📦 Building & Pushing Unified Backend..."
+cd backend
+docker build -t $USERNAME/$IMAGE_NAME:latest .
+docker push $USERNAME/$IMAGE_NAME:latest
 cd ..
 
-# 2. Registry Backend
-echo "📦 Building & Pushing Registry Backend..."
-cd registry-backend
-docker build -t $USERNAME/lumen-registry:latest .
-docker push $USERNAME/lumen-registry:latest
-cd ..
-
-echo "✅ All Backend Images Pushed! 🎆"
-echo "Next Step: You are 100% done with the terminal. Just go to Render and click 'Deploy latest reference' for both services."
-"
+echo "✅ Unified Backend Image Pushed! 🎆"
+echo "── Final Steps on Render ──"
+echo "1. Go to your Render Dashboard."
+echo "2. Click 'New' -> 'Web Service'."
+echo "3. Choose 'Deploy an existing image'."
+echo "4. Use: docker.io/$USERNAME/$IMAGE_NAME:latest"
+echo "5. Configure your environment variables (DATABASE_URL, etc.) in the Render dashboard."
