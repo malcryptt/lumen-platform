@@ -1,7 +1,7 @@
 # Lumen Platform
 
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
-[![Website](https://img.shields.io/badge/website-lumen--lang.vercel.app-blue)](https://lumen-lang.vercel.app)
+[![Website](https://img.shields.io/badge/website-lumen--platform--beta-blue)](https://lumen-platform-beta.vercel.app)
 
 The complete platform around the Lumen programming language — shell, web IDE, website, installers, and editor extensions.
 
@@ -15,7 +15,7 @@ The complete platform around the Lumen programming language — shell, web IDE, 
 | |__ | |_| | |\/| | _|| .` |
 |____|_\___/|_|  |_|___|_|\_|
 
-v2.0.0  |  lumen-lang.vercel.app  |  :help for commands
+v2.0.0  |  lumen-platform-beta.vercel.app  |  :help for commands
 
 lumen> let name = "Mayor"
 lumen> print("Hello, {name}!")
@@ -35,7 +35,7 @@ cd lumen
 
 **One-line install**
 ```bash
-curl -fsSL https://lumen-lang.org/install.sh | sh
+curl -fsSL https://lumen-platform-beta.vercel.app/install.sh | sh
 ```
 
 **VS Code Extension**
