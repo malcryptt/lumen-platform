@@ -73,6 +73,7 @@ fastify.post('/packages/publish', async (request: FastifyRequest, reply: Fastify
 // --- Routes: IDE Execution (WebSocket) ---
 fastify.register(async (instance: FastifyInstance) => {
     instance.get('/ws/exec', { websocket: true }, (connection: SocketStream, req: FastifyRequest) => {
+        console.log(`[WebSocket] New connection from ${req.ip}`);
         connection.socket.on('message', async (message: any) => {
             const data = JSON.parse(message.toString());
             if (data.type === 'run') {

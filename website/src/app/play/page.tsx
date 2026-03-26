@@ -19,8 +19,17 @@ export default function PlaygroundPage() {
         const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
         const finalUrl = `${protocol}${backendUrl}/ws/exec`;
 
-        console.log("Connecting to Lumen Backend:", finalUrl);
+        setOutput(`🛰️ Connecting to ${finalUrl}...\n`);
         ws.current = new WebSocket(finalUrl);
+
+        ws.current.onopen = () => {
+            setOutput(prev => prev + `✅ Connected! Ready to run.\n`);
+        };
+
+        ws.current.onerror = () => {
+            setOutput(prev => prev + `❌ Connection Failed. Check NEXT_PUBLIC_BACKEND_URL or Render logs.\n`);
+        };
+
         ws.current.onmessage = (event) => {
             const data = JSON.parse(event.data);
             if (data.type === 'output') {
