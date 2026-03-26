@@ -18,7 +18,7 @@ export default function LandingPage() {
           <Link href="/blog" className="hover:text-white transition-colors">Blog</Link>
         </div>
         <div className="flex items-center space-x-4">
-          <Link href="https://github.com/lumen-lang" className="text-[#8b949e] hover:text-white transition-colors">
+          <Link href="https://github.com/malcryptt/lumen-platform" className="text-[#8b949e] hover:text-white transition-colors">
             <Github size={20} />
           </Link>
           <Link href="/play" className="bg-[#238636] hover:bg-[#2ea043] text-white px-5 py-2 rounded-md font-bold text-sm transition-all shadow-md shadow-green-900/10">
@@ -41,7 +41,7 @@ export default function LandingPage() {
             One language for everything from web servers to tensor math.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 pt-4">
-            <Link href="/docs/install" className="bg-white text-black px-8 py-4 rounded-lg font-bold text-lg hover:bg-[#f0f0f0] transition-all flex items-center justify-center space-x-2">
+            <Link href="/docs#cli" className="bg-white text-black px-8 py-4 rounded-lg font-bold text-lg hover:bg-[#f0f0f0] transition-all flex items-center justify-center space-x-2">
               <span>Install Lumen</span>
             </Link>
             <Link href="/play" className="bg-[#21262d] text-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-[#30363d] transition-all border border-[#30363d] flex items-center justify-center space-x-2">

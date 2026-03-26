@@ -110,21 +110,25 @@ fastify.register(async (instance: FastifyInstance) => {
                         connection.socket.send(JSON.stringify({ type: 'output', data: `\n── Execution finished (exit code: ${result.StatusCode}).\n` }));
                         await container.remove();
                     } else {
-                        // Fallback to local 'lumen' binary execution
-                        // Use the bundled 'lumen' binary in the backend root
-                        const processExec = exec(`./lumen run -e "${code.replace(/"/g, '\\"')}"`, {
-                            timeout: 5000,
-                            maxBuffer: 1024 * 1024
+                        // Fallback to local 'lumen' binary execution with restricted environment
+                        const { spawn } = await import('node:child_process');
+                        const processExec = spawn('./lumen', ['run', '-e', code], {
+                            timeout: 2000,
+                            env: { ...process.env, NODE_ENV: 'production' }
                         });
 
-                        processExec.stdout?.on('data', (data: any) => {
+                        processExec.stdout?.on('data', (data) => {
                             connection.socket.send(JSON.stringify({ type: 'output', data: data.toString() }));
                         });
-                        processExec.stderr?.on('data', (data: any) => {
+                        processExec.stderr?.on('data', (data) => {
                             connection.socket.send(JSON.stringify({ type: 'output', data: data.toString() }));
                         });
-                        processExec.on('close', (code: number) => {
-                            connection.socket.send(JSON.stringify({ type: 'output', data: `\n── Execution finished (exit code: ${code}).\n` }));
+                        processExec.on('close', (code) => {
+                            const status = code === 0 ? "finished successfully" : `failed (exit code: ${code})`;
+                            connection.socket.send(JSON.stringify({ type: 'output', data: `\n── Execution ${status}.\n` }));
+                        });
+                        processExec.on('error', (err) => {
+                            connection.socket.send(JSON.stringify({ type: 'error', data: `Execution error: ${err.message}` }));
                         });
                     }
                 } catch (err) {
