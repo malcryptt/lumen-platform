@@ -12,15 +12,15 @@ export default function PlaygroundPage() {
     const ws = useRef<WebSocket | null>(null);
 
     useEffect(() => {
-        let backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'ws://localhost:3001';
+        let backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'localhost:3001';
 
-        // Ensure protocol is present
-        if (!backendUrl.startsWith('ws://') && !backendUrl.startsWith('wss://')) {
-            const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
-            backendUrl = `${protocol}${backendUrl}`;
-        }
+        // Clean URL: remove protocols and trailing slashes
+        backendUrl = backendUrl.replace(/^https?:\/\//, '').replace(/\/$/, '');
+        const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+        const finalUrl = `${protocol}${backendUrl}/ws/exec`;
 
-        ws.current = new WebSocket(`${backendUrl}/ws/exec`);
+        console.log("Connecting to Lumen Backend:", finalUrl);
+        ws.current = new WebSocket(finalUrl);
         ws.current.onmessage = (event) => {
             const data = JSON.parse(event.data);
             if (data.type === 'output') {

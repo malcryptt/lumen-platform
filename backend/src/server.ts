@@ -1,20 +1,21 @@
 import Fastify, { FastifyRequest, FastifyReply, FastifyInstance } from 'fastify';
 import fastifyWebsocket, { SocketStream } from '@fastify/websocket';
+import cors from '@fastify/cors';
 import { PrismaClient } from '@prisma/client';
 import Docker from 'dockerode';
 import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
-import { createRequire } from 'node:module';
 import { Buffer } from 'node:buffer';
 import process from 'node:process';
-import { exec } from 'node:child_process';
+import { spawn } from 'node:child_process';
+import { existsSync } from 'node:fs';
 
-const require = createRequire(import.meta.url);
 const fastify = Fastify({ logger: true });
 const prisma = new PrismaClient();
 const docker = new Docker();
 
 // --- Initialization ---
+fastify.register(cors, { origin: '*' });
 fastify.register(fastifyWebsocket);
 
 // --- Registry Schemas ---
