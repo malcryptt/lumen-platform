@@ -39,9 +39,19 @@ chmod +x "$INSTALL_DIR/bin/lumen"
 
 # Add to PATH if not present
 if [[ ":$PATH:" != *":$INSTALL_DIR/bin:"* ]]; then
-    echo "── Adding $INSTALL_DIR/bin to PATH in .bashrc"
-    echo "export PATH=\"\$PATH:$INSTALL_DIR/bin\"" >> "$HOME/.bashrc"
-    echo "── Please restart your terminal or run: source ~/.bashrc"
+    echo "── Adding $INSTALL_DIR/bin to PATH"
+    
+    # Update .bashrc
+    if [ -f "$HOME/.bashrc" ]; then
+        echo "export PATH=\"\$PATH:$INSTALL_DIR/bin\"" >> "$HOME/.bashrc"
+    fi
+    
+    # Update .zshrc for Zsh users
+    if [ -f "$HOME/.zshrc" ]; then
+        echo "export PATH=\"\$PATH:$INSTALL_DIR/bin\"" >> "$HOME/.zshrc"
+    fi
+
+    echo "── Please restart your terminal or run: exec \$SHELL"
 fi
 
 echo "── Lumen successfully installed to $INSTALL_DIR/bin/lumen"
