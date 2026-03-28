@@ -24,6 +24,7 @@ export default function LandingPage() {
         <div className="hidden md:flex items-center space-x-8 text-sm font-medium">
           <Link href="/docs" className="hover:text-white transition-colors">Docs</Link>
           <Link href="/packages" className="hover:text-white transition-colors">Packages</Link>
+          <Link href="/copilot" className="text-cyan-400 hover:text-cyan-300 transition-colors font-bold flex items-center gap-1"><Zap size={14} /> Copilot</Link>
           <Link href="/benchmarks" className="hover:text-white transition-colors">Benchmarks</Link>
           <Link href="/blog" className="hover:text-white transition-colors">Blog</Link>
         </div>
