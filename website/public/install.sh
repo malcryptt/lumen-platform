@@ -41,14 +41,23 @@ chmod +x "$INSTALL_DIR/bin/lumen"
 if [[ ":$PATH:" != *":$INSTALL_DIR/bin:"* ]]; then
     echo "── Adding $INSTALL_DIR/bin to PATH"
     
-    # Update .bashrc
-    if [ -f "$HOME/.bashrc" ]; then
-        echo "export PATH=\"\$PATH:$INSTALL_DIR/bin\"" >> "$HOME/.bashrc"
-    fi
+    # Common shell configuration files
+    SHELL_FILES=("$HOME/.bashrc" "$HOME/.zshrc" "$HOME/.profile" "$HOME/.bash_profile")
     
-    # Update .zshrc for Zsh users
-    if [ -f "$HOME/.zshrc" ]; then
-        echo "export PATH=\"\$PATH:$INSTALL_DIR/bin\"" >> "$HOME/.zshrc"
+    for FILE in "${SHELL_FILES[@]}"; do
+        if [ -f "$FILE" ]; then
+            if ! grep -q "$INSTALL_DIR/bin" "$FILE"; then
+                echo "export PATH=\"\$PATH:$INSTALL_DIR/bin\"" >> "$FILE"
+            fi
+        fi
+    done
+
+    # Support for Fish shell
+    FISH_CONFIG="$HOME/.config/fish/config.fish"
+    if [ -f "$FISH_CONFIG" ]; then
+        if ! grep -q "$INSTALL_DIR/bin" "$FISH_CONFIG"; then
+            echo "set -U fish_user_paths $INSTALL_DIR/bin \$fish_user_paths" >> "$FISH_CONFIG"
+        fi
     fi
 
     echo "── Please restart your terminal or run: exec \$SHELL"

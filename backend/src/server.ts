@@ -1,5 +1,7 @@
-import Fastify, { FastifyRequest, FastifyReply, FastifyInstance } from 'fastify';
-import fastifyWebsocket, { SocketStream } from '@fastify/websocket';
+import Fastify from 'fastify';
+import type { FastifyRequest, FastifyReply, FastifyInstance } from 'fastify';
+import fastifyWebsocket from '@fastify/websocket';
+import type { SocketStream } from '@fastify/websocket';
 import cors from '@fastify/cors';
 import { PrismaClient } from '@prisma/client';
 import Docker from 'dockerode';
@@ -10,6 +12,9 @@ import process from 'node:process';
 import { spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
 
+// --- Modules ---
+import { copilotPlugin } from './copilot/index.js';
+
 const fastify = Fastify({ logger: true });
 const prisma = new PrismaClient();
 const docker = new Docker();
@@ -17,6 +22,7 @@ const docker = new Docker();
 // --- Initialization ---
 fastify.register(cors, { origin: '*' });
 fastify.register(fastifyWebsocket);
+fastify.register(copilotPlugin);
 
 // --- Registry Schemas ---
 const PublishSchema = z.object({
@@ -30,6 +36,41 @@ const PublishSchema = z.object({
 
 // --- Routes: Health ---
 fastify.get('/health', async () => ({ status: 'ok', service: 'lumen-unified-backend' }));
+
+// --- Routes: AI ---
+fastify.post('/ai/chat', async (request: FastifyRequest) => {
+    const { message } = request.body as { message: string };
+    const query = message.toLowerCase();
+
+    // Fallback Mock AI Logic for Lumen syntax
+    let reply = "I can help with that! Lumen is great for performance.";
+    if (query.includes("http") || query.includes("server")) {
+        reply = "Here is a simple HTTP server in Lumen:\n\n```lumen\nimport net\n\nserver = net.listen(8080)\nprint(\"Server running on 8080...\")\n\nfor client in server {\n    client.write(\"HTTP/1.1 200 OK\\r\\nContent-Length: 13\\r\\n\\r\\nHello Lumen!\\n\")\n    client.close()\n}\n```";
+    } else if (query.includes("loop") || query.includes("benchmark")) {
+        reply = "Lumen loops are extremely fast. Try this:\n\n```lumen\nimport time\n\nstart = time.now()\ncount = 0\nfor i in 1..1000000 {\n    count += 1\n}\nprint(\"Took: \" .. time.since(start))\n```";
+    } else if (query.includes("hello")) {
+        reply = "Hello! I'm your Lumen assistant. You can ask me to generate code for servers, loops, or concurrency!";
+    }
+
+    return { reply };
+});
+
+// --- Routes: Auth (Beta) ---
+fastify.post('/auth/login', async (request: FastifyRequest) => {
+    const { username } = request.body as { username: string };
+    if (!username) return { error: "Username required" };
+
+    let user = await prisma.user.findUnique({ where: { username } });
+    if (!user) {
+        user = await prisma.user.create({
+            data: {
+                username,
+                apiKey: `lumen_beta_${Math.random().toString(36).slice(2)}`
+            }
+        });
+    }
+    return { apiKey: user.apiKey, username: user.username };
+});
 
 // --- Routes: Registry ---
 fastify.get('/packages', async () => {
@@ -92,27 +133,47 @@ fastify.register(async (instance: FastifyInstance) => {
                         // Docker likely unavailable on Render Native Runtime
                     }
 
-                    if (dockerAvailable) {
-                        const container = await docker.createContainer({
-                            Image: 'lumen-sandbox',
-                            Cmd: ['lumen', 'run', '-e', code],
-                            name: containerName,
-                            HostConfig: {
-                                Memory: 128 * 1024 * 1024,
-                                CpuQuota: 50000,
-                                NetworkMode: 'none',
-                            },
+                    const files = data.files as { [name: string]: string } | undefined;
+                    const entry = data.entry || 'main.lm';
+
+                    if (files) {
+                        // Multi-file Project Execution
+                        const { spawn } = await import('node:child_process');
+                        const fs = await import('node:fs/promises');
+                        const path = await import('node:path');
+                        const os = await import('node:os');
+
+                        const tmpDir = path.join(os.tmpdir(), `lumen_proj_${Date.now()}`);
+                        await fs.mkdir(tmpDir, { recursive: true });
+
+                        // Write all project files
+                        for (const [name, content] of Object.entries(files)) {
+                            const filePath = path.join(tmpDir, name);
+                            await fs.mkdir(path.dirname(filePath), { recursive: true });
+                            await fs.writeFile(filePath, content);
+                        }
+
+                        const lumenPath = path.resolve('./lumen');
+                        const processExec = spawn(lumenPath, ['run', entry], {
+                            cwd: tmpDir,
+                            timeout: 3000,
+                            env: { ...process.env, NODE_ENV: 'production' }
                         });
-                        await container.start();
-                        const logs = await container.logs({ stdout: true, stderr: true, follow: true });
-                        logs.on('data', (chunk: Buffer) => {
-                            connection.socket.send(JSON.stringify({ type: 'output', data: chunk.toString() }));
+
+                        processExec.stdout?.on('data', (d) => connection.socket.send(JSON.stringify({ type: 'output', data: d.toString() })));
+                        processExec.stderr?.on('data', (d) => connection.socket.send(JSON.stringify({ type: 'output', data: d.toString() })));
+
+                        processExec.on('close', async (code) => {
+                            const status = code === 0 ? "finished" : `failed (exit code: ${code})`;
+                            connection.socket.send(JSON.stringify({ type: 'output', data: `\n── Project execution ${status}.\n` }));
+
+                            // Cleanup
+                            await fs.rm(tmpDir, { recursive: true, force: true });
+
+                            // Optional Benchmark logic for multi-file? (Skipping for now to keep it simple)
                         });
-                        const result = await container.wait();
-                        connection.socket.send(JSON.stringify({ type: 'output', data: `\n── Execution finished (exit code: ${result.StatusCode}).\n` }));
-                        await container.remove();
-                    } else {
-                        // Fallback to local 'lumen' binary execution with restricted environment
+                    } else if (code) {
+                        // Single-file legacy execution
                         const { spawn } = await import('node:child_process');
                         const processExec = spawn('./lumen', ['run', '-e', code], {
                             timeout: 2000,
@@ -125,9 +186,33 @@ fastify.register(async (instance: FastifyInstance) => {
                         processExec.stderr?.on('data', (data) => {
                             connection.socket.send(JSON.stringify({ type: 'output', data: data.toString() }));
                         });
-                        processExec.on('close', (code) => {
+                        processExec.on('close', async (code) => {
                             const status = code === 0 ? "finished successfully" : `failed (exit code: ${code})`;
                             connection.socket.send(JSON.stringify({ type: 'output', data: `\n── Execution ${status}.\n` }));
+
+                            // Comparative Benchmarking Logic
+                            const options = data.options || {};
+                            if (options.compareWithPython) {
+                                connection.socket.send(JSON.stringify({ type: 'output', data: `\n⚖️ [BENCHMARK] Running Python Baseline...\n` }));
+                                const { spawn } = await import('node:child_process');
+
+                                // Simple Python baseline for comparison
+                                const pythonCode = `
+import time
+start = time.time()
+count = 0
+for i in range(1000000):
+    count += 1
+print(f"Python baseline took: {(time.time() - start) * 1000:.2f}ms")
+`;
+                                const pyExec = spawn('python3', ['-c', pythonCode]);
+                                pyExec.stdout?.on('data', (d) => {
+                                    connection.socket.send(JSON.stringify({ type: 'output', data: `🐍 ${d.toString()}` }));
+                                });
+                                pyExec.on('close', (pyCode) => {
+                                    connection.socket.send(JSON.stringify({ type: 'output', data: `── Benchmark complete.\n` }));
+                                });
+                            }
                         });
                         processExec.on('error', (err) => {
                             connection.socket.send(JSON.stringify({ type: 'error', data: `Execution error: ${err.message}` }));

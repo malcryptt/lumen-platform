@@ -30,8 +30,46 @@ model Version {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  username  String   @unique
-  apiKey    String   @unique
-  createdAt DateTime @default(now())
+  id             String          @id @default(uuid())
+  username       String          @unique
+  apiKey         String          @unique
+  deploySessions DeploySession[]
+  createdAt      DateTime        @default(now())
+}
+
+enum DeployStatus {
+  scanning
+  config_ready
+  deploying
+  live
+  failed
+}
+
+enum LogLevel {
+  info
+  warn
+  error
+}
+
+model DeploySession {
+  id              String       @id @default(uuid())
+  userId          String
+  user            User         @relation(fields: [userId], references: [id])
+  repoUrl         String?
+  scanResult      Json? // Raw Gemini scanner output
+  lumenConfig     String? // Generated .lumen config string
+  renderServiceId String? // Render service ID once deployed
+  status          DeployStatus @default(scanning)
+  logs            DeployLog[]
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+}
+
+model DeployLog {
+  id        String        @id @default(uuid())
+  sessionId String
+  session   DeploySession @relation(fields: [sessionId], references: [id])
+  line      String
+  level     LogLevel      @default(info)
+  timestamp DateTime      @default(now())
 }

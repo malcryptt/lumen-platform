@@ -1,8 +1,18 @@
-import React from 'react';
+"use client";
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Terminal, Zap, Shield, Cpu, Github, ExternalLink } from 'lucide-react';
+import { Terminal, Zap, Shield, Cpu, Github, ExternalLink, User as UserIcon, LogOut } from 'lucide-react';
+import AuthModal from '@/components/AuthModal';
 
 export default function LandingPage() {
+  const [user, setUser] = useState<any>(null);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem('lumen_user');
+    if (storedUser) setUser(JSON.parse(storedUser));
+  }, []);
+
   return (
     <div className="bg-[#0d1117] text-[#c9d1d9] min-h-screen font-sans">
       {/* Navbar */}
@@ -21,11 +31,45 @@ export default function LandingPage() {
           <Link href="https://github.com/malcryptt/lumen-platform" className="text-[#8b949e] hover:text-white transition-colors">
             <Github size={20} />
           </Link>
+
+          {user ? (
+            <div className="flex items-center space-x-3 bg-[#161b22] border border-[#30363d] px-4 py-1.5 rounded-full">
+              <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-purple-500 to-blue-500 flex items-center justify-center text-[10px] font-bold text-white uppercase">
+                {user.username.slice(0, 2)}
+              </div>
+              <span className="text-xs font-bold text-white hidden lg:inline">{user.username}</span>
+              <button
+                onClick={() => {
+                  localStorage.removeItem('lumen_user');
+                  setUser(null);
+                }}
+                className="p-1 hover:text-red-400 transition-colors"
+                title="Sign Out"
+              >
+                <LogOut size={16} />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setIsAuthModalOpen(true)}
+              className="text-[#8b949e] hover:text-white transition-colors text-sm font-bold"
+            >
+              Sign In
+            </button>
+          )}
+
           <Link href="/play" className="bg-[#238636] hover:bg-[#2ea043] text-white px-5 py-2 rounded-md font-bold text-sm transition-all shadow-md shadow-green-900/10">
             Try in Browser
           </Link>
         </div>
       </nav>
+
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onLogin={setUser}
+      />
+
 
       {/* Hero Section */}
       <section className="max-w-7xl mx-auto px-8 py-24 md:py-32 flex flex-col md:flex-row items-center justify-between gap-16">
