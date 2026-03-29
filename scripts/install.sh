@@ -47,4 +47,17 @@ if [[ ":$PATH:" != *":$INSTALL_DIR/bin:"* ]]; then
 fi
 
 echo "── Lumen successfully installed to $INSTALL_DIR/bin/lumen"
+
+# VS Code Extension installation
+if command -v code &> /dev/null; then
+    echo "── VS Code detected. Installing Lumen AI Editor Extension..."
+    VSIX_URL="https://raw.githubusercontent.com/malcryptt/lumen-platform/main/vscode-extension/lumen-lang-0.1.0.vsix"
+    curl -fsSL "$VSIX_URL" -o "$INSTALL_DIR/lumen-lang.vsix"
+    code --install-extension "$INSTALL_DIR/lumen-lang.vsix" --force || true
+    rm -f "$INSTALL_DIR/lumen-lang.vsix"
+    echo "── IDE Extension & AI Copilot installed!"
+else
+    echo "── 'code' command not found, skipping VS Code Extension."
+fi
+
 echo "── Run 'lumen version' to verify."
