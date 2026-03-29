@@ -23,7 +23,8 @@ export default function CopilotSidebar({ onInsertCode }: { onInsertCode: (code: 
         setIsTyping(true);
 
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/ai/chat`, {
+            const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+            const response = await fetch(`${backendUrl}/ai/chat`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ message: input })
@@ -66,8 +67,8 @@ export default function CopilotSidebar({ onInsertCode }: { onInsertCode: (code: 
                 {messages.map((msg, i) => (
                     <div key={i} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
                         <div className={`max-w-[90%] p-3 rounded-2xl text-xs leading-relaxed ${msg.role === 'user'
-                                ? 'bg-blue-600 text-white rounded-tr-none'
-                                : 'bg-[#161b22] text-[#c9d1d9] border border-[#30363d] rounded-tl-none'
+                            ? 'bg-blue-600 text-white rounded-tr-none'
+                            : 'bg-[#161b22] text-[#c9d1d9] border border-[#30363d] rounded-tl-none'
                             }`}>
                             {msg.content}
                             {msg.role === 'assistant' && extractCode(msg.content) && (

@@ -1,8 +1,32 @@
 import Groq from "groq-sdk";
 import { config } from "../../config.js";
 
+const SYSTEM_PROMPT = `You are Lumen Copilot — an expert AI assistant for the Lumen programming language.
+
+Lumen is a fast, secure, multipurpose compiled language with syntax similar to Lua/Rust hybrid.
+Key facts about Lumen:
+- Comments use --
+- Functions: fn name(args) { ... }
+- Variables: let x = 5 or val x = 5 (immutable)
+- Loops: for i in 1..10 { } and while cond { }
+- Strings: "hello {name}" (interpolation with {})
+- Types: Int, Float, String, Bool, List, Map, bytes, Result, Option
+- Imports: import net, import time, import crypto
+- Classes: class Foo { pub fn new() { } }
+- Error handling: try { } catch e { }
+- It has built-in net, time, crypto, async, and tensor modules
+
+When asked for code, always wrap it in \`\`\`lumen ... \`\`\` blocks.
+When the state includes editorContext, analyze that code before answering.
+Be concise, technically accurate, and friendly. Help with:
+1. Writing and explaining Lumen code
+2. Debugging errors
+3. Deployment configuration with .lumen files
+4. Performance and best practices
+`;
+
 /**
- * ChatAgent - Friendly deployment guide using Groq (Llama 3/4).
+ * ChatAgent - Code & deployment assistant using Groq (Llama 4 Scout).
  */
 export class ChatAgent {
     private groq: Groq;
@@ -14,33 +38,25 @@ export class ChatAgent {
     }
 
     /**
-     * Generates a conversational response based on user input and deploy state.
+     * Generates a contextual response.
      * @param message User's message
-     * @param state Current deployment session state
+     * @param state Optional context (selected code, deploy session state, etc.)
      */
-    async chat(message: string, state: any) {
-        const prompt = `
-      You are Lumen Copilot, a friendly and expert deployment assistant.
-      Your goal is to guide the user through deploying their code using Lumen.
-
-      Current Deploy Session State:
-      ${JSON.stringify(state, null, 2)}
-
-      User said: "${message}"
-
-      Contextual Guidance:
-      - If status is 'scanning', tell them you're analyzing their repo.
-      - If status is 'config_ready', explain the generated Lumen config and ask for confirmation to deploy.
-      - If status is 'deploying', explain that the cloud environment is being provisioned.
-      - If status is 'live', congratulate them and provide the URL.
-      - If status is 'failed', perform a basic diagnostic based on logs (if provided).
-      
-      Keep your response short, technical yet friendly, and focused on the next step.
-    `;
+    async chat(message: string, state: any = {}) {
+        const userContent = state.editorContext
+            ? `Context (selected code):\n\`\`\`\n${state.editorContext}\n\`\`\`\n\nUser question: ${message}`
+            : state && Object.keys(state).length > 0
+                ? `Deploy session state:\n${JSON.stringify(state, null, 2)}\n\nUser said: "${message}"`
+                : message;
 
         const chatCompletion = await this.groq.chat.completions.create({
-            messages: [{ role: "user", content: prompt }],
-            model: "llama-3.1-70b-versatile", // Using Llama 3.1 as representative of "fast/good"
+            messages: [
+                { role: "system", content: SYSTEM_PROMPT },
+                { role: "user", content: userContent }
+            ],
+            model: "meta-llama/llama-4-scout-17b-16e-instruct",
+            temperature: 0.7,
+            max_tokens: 1024,
         });
 
         return chatCompletion.choices[0]?.message?.content || "I'm having trouble connecting to my brain right now.";

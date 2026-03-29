@@ -63,6 +63,9 @@ export function activate(context: vscode.ExtensionContext) {
             }
         }),
         vscode.commands.registerCommand('lumen.askCopilot', () => {
+            const editor = vscode.window.activeTextEditor;
+            const selectedCode = editor?.document.getText(editor.selection) || '';
+
             const panel = vscode.window.createWebviewPanel(
                 'lumenCopilot',
                 'Lumen AI Copilot',
@@ -70,7 +73,7 @@ export function activate(context: vscode.ExtensionContext) {
                 { enableScripts: true }
             );
 
-            panel.webview.html = getCopilotWebviewHtml();
+            panel.webview.html = getCopilotWebviewHtml(selectedCode);
 
             panel.webview.onDidReceiveMessage(
                 async (message) => {
@@ -80,12 +83,20 @@ export function activate(context: vscode.ExtensionContext) {
                                 const response = await fetch('http://localhost:3001/ai/chat', {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ message: message.text })
+                                    body: JSON.stringify({ message: message.text, context: message.context })
                                 });
                                 const data = await response.json() as any;
                                 panel.webview.postMessage({ command: 'receiveAI', text: data.reply });
                             } catch (err) {
                                 panel.webview.postMessage({ command: 'receiveAI', text: "❌ Error connecting to Lumen Backend (is it running on port 3001?)" });
+                            }
+                            return;
+                        case 'insertCode':
+                            if (editor) {
+                                editor.edit(editBuilder => {
+                                    const pos = editor.selection.end;
+                                    editBuilder.insert(pos, '\n' + message.code);
+                                });
                             }
                             return;
                     }
@@ -141,7 +152,15 @@ export function deactivate(): Thenable<void> | undefined {
     return client.stop();
 }
 
-function getCopilotWebviewHtml() {
+function getCopilotWebviewHtml(selectedCode: string = '') {
+    const escapedCode = selectedCode.replace(/`/g, '\\`').replace(/\$/g, '\\$');
+    const contextSection = selectedCode
+        ? `<div style="margin-bottom:10px;padding:8px;background:var(--vscode-editorWidget-background);border:1px solid var(--vscode-editorWidget-border);border-radius:6px;font-size:11px;">
+            <div style="color:var(--vscode-descriptionForeground);margin-bottom:4px;">📎 Selected code context:</div>
+            <pre style="margin:0;overflow-x:auto;font-family:var(--vscode-editor-font-family);font-size:11px;white-space:pre-wrap;">${selectedCode.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
+           </div>`
+        : '';
+
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -149,23 +168,28 @@ function getCopilotWebviewHtml() {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lumen AI Copilot</title>
     <style>
-        body { font-family: var(--vscode-font-family); padding: 10px; display: flex; flex-direction: column; height: 100vh; margin: 0; box-sizing: border-box; background: var(--vscode-editor-background); color: var(--vscode-editor-foreground); }
+        * { box-sizing: border-box; }
+        body { font-family: var(--vscode-font-family); font-size: 13px; padding: 10px; display: flex; flex-direction: column; height: 100vh; margin: 0; background: var(--vscode-editor-background); color: var(--vscode-editor-foreground); }
         #chat { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
-        .msg { max-width: 85%; padding: 8px 12px; border-radius: 8px; line-height: 1.4; word-wrap: break-word; }
-        .user { align-self: flex-end; background: var(--vscode-button-background); color: var(--vscode-button-foreground); }
-        .ai { align-self: flex-start; background: var(--vscode-editorWidget-background); border: 1px solid var(--vscode-editorWidget-border); }
-        #input-container { display: flex; gap: 8px; }
-        input { flex: 1; padding: 8px; border-radius: 4px; border: 1px solid var(--vscode-input-border); background: var(--vscode-input-background); color: var(--vscode-input-foreground); font-family: var(--vscode-font-family); }
-        button { padding: 8px 12px; border: none; background: var(--vscode-button-background); color: var(--vscode-button-foreground); border-radius: 4px; cursor: pointer; }
-        button:hover { background: var(--vscode-button-hoverBackground); }
+        .msg { max-width: 90%; padding: 8px 12px; border-radius: 8px; line-height: 1.5; word-wrap: break-word; white-space: pre-wrap; }
+        .user { align-self: flex-end; background: var(--vscode-button-background); color: var(--vscode-button-foreground); border-radius: 8px 8px 2px 8px; }
+        .ai { align-self: flex-start; background: var(--vscode-editorWidget-background); border: 1px solid var(--vscode-editorWidget-border); border-radius: 8px 8px 8px 2px; }
+        .insert-btn { margin-top: 6px; padding: 4px 10px; font-size: 11px; border: 1px solid var(--vscode-button-background); background: transparent; color: var(--vscode-button-background); border-radius: 4px; cursor: pointer; }
+        .insert-btn:hover { background: var(--vscode-button-background); color: var(--vscode-button-foreground); }
+        #input-row { display: flex; gap: 6px; }
+        textarea { flex: 1; padding: 8px; border-radius: 4px; border: 1px solid var(--vscode-input-border); background: var(--vscode-input-background); color: var(--vscode-input-foreground); font-family: var(--vscode-font-family); font-size: 13px; resize: none; min-height: 38px; max-height: 120px; }
+        button#sendBtn { padding: 8px 14px; border: none; background: var(--vscode-button-background); color: var(--vscode-button-foreground); border-radius: 4px; cursor: pointer; align-self: flex-end; }
+        button#sendBtn:hover { background: var(--vscode-button-hoverBackground); }
+        .typing { font-style: italic; color: var(--vscode-descriptionForeground); font-size: 11px; }
     </style>
 </head>
 <body>
+    ${contextSection}
     <div id="chat">
-        <div class="msg ai">Hi! I'm Lumen Copilot. How can I help you write or deploy your Lumen code today?</div>
+        <div class="msg ai">Hi! I'm Lumen Copilot. ${selectedCode ? 'I can see your selected code. Ask me anything about it!' : 'How can I help you write or deploy Lumen code today?'}</div>
     </div>
-    <div id="input-container">
-        <input type="text" id="prompt" placeholder="Ask anything about Lumen..." />
+    <div id="input-row">
+        <textarea id="prompt" placeholder="Ask anything about Lumen..." rows="1"></textarea>
         <button id="sendBtn">Send</button>
     </div>
 
@@ -174,30 +198,68 @@ function getCopilotWebviewHtml() {
         const chat = document.getElementById('chat');
         const promptInput = document.getElementById('prompt');
         const sendBtn = document.getElementById('sendBtn');
+        const selectedCode = \`${escapedCode}\`;
+
+        function extractCode(text) {
+            const m = text.match(/\`\`\`(?:lumen)?\\n([\\s\\S]*?)\`\`\`/);
+            return m ? m[1] : null;
+        }
 
         function addMessage(text, isUser) {
+            const wrapper = document.createElement('div');
+            wrapper.style.display = 'flex';
+            wrapper.style.flexDirection = 'column';
+            wrapper.style.alignItems = isUser ? 'flex-end' : 'flex-start';
+
             const div = document.createElement('div');
             div.className = 'msg ' + (isUser ? 'user' : 'ai');
             div.textContent = text;
-            chat.appendChild(div);
+            wrapper.appendChild(div);
+
+            if (!isUser) {
+                const code = extractCode(text);
+                if (code) {
+                    const btn = document.createElement('button');
+                    btn.className = 'insert-btn';
+                    btn.textContent = '⬆ Insert into Editor';
+                    btn.onclick = () => vscode.postMessage({ command: 'insertCode', code });
+                    wrapper.appendChild(btn);
+                }
+            }
+
+            chat.appendChild(wrapper);
             chat.scrollTop = chat.scrollHeight;
         }
+
+        promptInput.addEventListener('input', () => {
+            promptInput.style.height = 'auto';
+            promptInput.style.height = Math.min(promptInput.scrollHeight, 120) + 'px';
+        });
 
         function send() {
             const text = promptInput.value.trim();
             if (!text) return;
             addMessage(text, true);
             promptInput.value = '';
-            vscode.postMessage({ command: 'askAI', text });
+            promptInput.style.height = 'auto';
+            vscode.postMessage({ command: 'askAI', text, context: selectedCode || undefined });
+            const typing = document.createElement('div');
+            typing.className = 'typing';
+            typing.id = 'typing-indicator';
+            typing.textContent = 'Lumen Copilot is thinking...';
+            chat.appendChild(typing);
+            chat.scrollTop = chat.scrollHeight;
         }
 
         sendBtn.addEventListener('click', send);
         promptInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') send();
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
         });
 
         window.addEventListener('message', event => {
             const message = event.data;
+            const typing = document.getElementById('typing-indicator');
+            if (typing) typing.remove();
             switch (message.command) {
                 case 'receiveAI':
                     addMessage(message.text, false);

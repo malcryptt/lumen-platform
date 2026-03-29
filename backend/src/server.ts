@@ -38,21 +38,27 @@ const PublishSchema = z.object({
 fastify.get('/health', async () => ({ status: 'ok', service: 'lumen-unified-backend' }));
 
 // --- Routes: AI ---
-fastify.post('/ai/chat', async (request: FastifyRequest) => {
-    const { message } = request.body as { message: string };
-    const query = message.toLowerCase();
+fastify.post('/ai/chat', async (request: FastifyRequest, reply: FastifyReply) => {
+    const { message, context } = request.body as { message: string; context?: string };
+    if (!message) return reply.code(400).send({ error: 'message is required' });
 
-    // Fallback Mock AI Logic for Lumen syntax
-    let reply = "I can help with that! Lumen is great for performance.";
-    if (query.includes("http") || query.includes("server")) {
-        reply = "Here is a simple HTTP server in Lumen:\n\n```lumen\nimport net\n\nserver = net.listen(8080)\nprint(\"Server running on 8080...\")\n\nfor client in server {\n    client.write(\"HTTP/1.1 200 OK\\r\\nContent-Length: 13\\r\\n\\r\\nHello Lumen!\\n\")\n    client.close()\n}\n```";
-    } else if (query.includes("loop") || query.includes("benchmark")) {
-        reply = "Lumen loops are extremely fast. Try this:\n\n```lumen\nimport time\n\nstart = time.now()\ncount = 0\nfor i in 1..1000000 {\n    count += 1\n}\nprint(\"Took: \" .. time.since(start))\n```";
-    } else if (query.includes("hello")) {
-        reply = "Hello! I'm your Lumen assistant. You can ask me to generate code for servers, loops, or concurrency!";
+    try {
+        const { ChatAgent } = await import('./copilot/agent/chat.js');
+        const agent = new ChatAgent();
+        // Use context (e.g. selected code from editor) as deployment state for richer answers
+        const state = context ? { editorContext: context } : {};
+        const reply_text = await agent.chat(message, state);
+        return { reply: reply_text };
+    } catch (err) {
+        fastify.log.error(err);
+        // Graceful fallback if Groq key is missing or quota exceeded
+        const fallbacks: Record<string, string> = {
+            server: "Here's a simple HTTP server in Lumen:\n\n```lumen\nimport net\n\nserver = net.listen(8080)\nfor client in server {\n    client.write(\"HTTP/1.1 200 OK\\r\\nContent-Length: 13\\r\\n\\r\\nHello Lumen!\")\n    client.close()\n}\n```",
+            loop: "Lumen loops are very fast:\n\n```lumen\nimport time\nstart = time.now()\nfor i in 1..1_000_000 { _ = i }\nprint(\"Done: \" .. time.since(start))\n```",
+        };
+        const key = Object.keys(fallbacks).find(k => message.toLowerCase().includes(k));
+        return { reply: key ? fallbacks[key] : "Hi! I'm Lumen Copilot. Ask me anything about Lumen syntax, deployment, or your code." };
     }
-
-    return { reply };
 });
 
 // --- Routes: Auth (Beta) ---

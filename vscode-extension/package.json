@@ -8,9 +8,9 @@
     "vscode": "^1.80.0"
   },
   "categories": [
-    "Programming Languages"
+    "Programming Languages",
+    "AI"
   ],
-  "activationEvents": [],
   "main": "./out/extension.js",
   "repository": {
     "type": "git",
@@ -89,6 +89,35 @@
       {
         "language": "lumen",
         "path": "./snippets/lumen.json"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "lumen.askCopilot",
+          "when": "editorLangId == lumen || editorHasSelection",
+          "group": "lumen@1"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "lumen.runFile",
+          "when": "editorLangId == lumen",
+          "group": "navigation"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "lumen.askCopilot",
+        "key": "ctrl+shift+l",
+        "mac": "cmd+shift+l",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "lumen.runFile",
+        "key": "f5",
+        "when": "editorLangId == lumen && !inDebugMode"
       }
     ]
   },
