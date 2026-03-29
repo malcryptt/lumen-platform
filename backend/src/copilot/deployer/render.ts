@@ -70,7 +70,40 @@ export class RenderClient {
     }
 
     /**
+     * Update an existing service (Section 9.4).
+     */
+    async updateWebService(serviceId: string, updates: Partial<{
+        buildCommand: string,
+        startCommand: string,
+        envVars: Record<string, string>,
+        plan: string
+    }>) {
+        const payload: any = { serviceDetails: {} };
+        if (updates.buildCommand) payload.serviceDetails.buildCommand = updates.buildCommand;
+        if (updates.startCommand) payload.serviceDetails.startCommand = updates.startCommand;
+        if (updates.plan) payload.serviceDetails.plan = updates.plan;
+        if (updates.envVars) {
+            payload.serviceDetails.envVars = Object.entries(updates.envVars).map(([key, value]) => ({
+                key,
+                value
+            }));
+        }
+
+        const response = await this.client.patch(`/services/${serviceId}`, payload);
+        return response.data;
+    }
+
+    /**
+     * Trigger a new deployment for an existing service (Section 9.3).
+     */
+    async triggerDeploy(serviceId: string) {
+        const response = await this.client.post(`/services/${serviceId}/deploys`);
+        return response.data;
+    }
+
+    /**
      * Get deployment logs.
+...
      * @param serviceId Render Service ID
      */
     async getDeploymentLogs(serviceId: string) {

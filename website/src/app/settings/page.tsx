@@ -13,7 +13,7 @@ export default function SettingsPage() {
     const [error, setError] = useState('');
 
     useEffect(() => {
-        fetch(`${BACKEND}/user/integrations`)
+        fetch(`${BACKEND}/copilot/integrations`)
             .then(r => r.json())
             .then(d => {
                 if (d.githubLogin) setGithubLogin(d.githubLogin);
@@ -26,10 +26,10 @@ export default function SettingsPage() {
         if (!renderKey || renderKey === '************************') return;
         setLoading(true); setMessage(''); setError('');
         try {
-            const res = await fetch(`${BACKEND}/user/integrations/render`, {
+            const res = await fetch(`${BACKEND}/copilot/integrations`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ renderKey })
+                body: JSON.stringify({ renderApiKey: renderKey })
             });
             if (!res.ok) throw new Error('Failed to save key');
             setMessage('Render API Key encrypted and saved securely.');
@@ -45,7 +45,7 @@ export default function SettingsPage() {
         if (!confirm('Disconnect GitHub? Private repos will fail to scan.')) return;
         setLoading(true);
         try {
-            await fetch(`${BACKEND}/user/integrations/github`, { method: 'DELETE' });
+            await fetch(`${BACKEND}/copilot/integrations/github`, { method: 'DELETE' });
             setGithubLogin(null);
             setMessage('GitHub disconnected.');
         } catch { }

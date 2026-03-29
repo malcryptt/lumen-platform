@@ -1,68 +1,76 @@
-# Lumen Platform v2
+# Lumen Platform v2 (Beta)
 
-[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
-[![Website](https://img.shields.io/badge/website-lumen--platform--v2-blue)](https://lumen-platform.vercel.app)
-[![Beta](https://img.shields.io/badge/version-2.0.0--beta-orange)](https://v2.lumen-platform.vercel.app)
+Lumen is an AI-powered developer ecosystem designed for hyper-fast deployment, secure secret management, and automated infrastructure diagnosis. 
 
-Lumen is more than just a language -- it's a professional-grade developer ecosystem. From source code to production, Lumen combines top-tier performance with state-of-the-art AI assistance.
+## 1. Project Overview
+Lumen transitions traditional cloud workflows into "AI-native" cycles. Using Gemini 2.0 Flash, it scans project repos, generates deterministic `.lumen` configurations, and orchestrates multi-service deployments on Render.
 
----
-
-## v2 Features
-
-### AI-Powered Copilot (VS Code)
-Integration with **Groq Llama 4 Scout** for context-aware code generation and debugging.
-- **Deep Context**: Automatically uses your selected code as context for precise answers.
-- **Instant Injection**: Generating high-performance Lumen code? Insert it into your file with one click.
-- **Grammar v2**: Advanced syntax highlighting and LSP support for classes, imports, and reactive patterns.
-
-### Zero-Friction AI Deploy
-Move from local code to a live Render service in minutes with the Lumen v2 Deployment Engine.
-- AI Scanning: Automatic runtime detection and .lumen config generation.
-- Encrypted Secrets: Industry-standard AES-256-GCM encryption for all your cloud credentials and API keys.
-- Live State Machine: Track your push from scanning to live with real-time log streaming.
-- AI Diagnostics: Did the build fail? Our integrated Gemini 2.0 specialized models diagnose logs and fix your config automatically.
-
-### Comparative Benchmarking
-Verify performance directly in the Lumen Playground. Benchmark your Lumen scripts against Python 3.11/Node.js baselines in a secure sandbox.
-
----
-
-## Integrated CLI
-
+## 2. Quick Start (Standard Setup)
 ```bash
-lumen run main.lm          # Execution
-lumen deploy scan          # AI-Powered repo analysis
-lumen deploy push          # Production deployment
-lumen deploy status        # Tracking state
-lumen deploy diagnose      # AI Troubleshooting 
-lumen secrets add          # Secure key management
-lumen login                # Secure token-based auth
+# Install the CLI
+curl -sSf https://lumen-platform-beta.vercel.app/install.sh | sh
+
+# Login (Hardware-bound encryption)
+lumen login
+
+# Scan and Deploy
+lumen deploy scan https://github.com/user/my-app
+lumen deploy push
 ```
 
----
+## 3. Technology Stack
+- **Backend:** Node.js, Fastify, Prisma (PostgreSQL), Gemini 2.0 Flash (Diagnosis), Groq (Copilot Chat).
+- **Frontend:** Next.js 15, TailwindCSS, Lucide Icons.
+- **CLI:** C++20 (LSP/DAP support), CMake, Python3 hooks.
+- **Extensions:** VS Code (Typescript).
 
-## 🛠️ Quick Install
+## 4. Operational Bible (Ground Truth)
+The architectural integrity of the platform is governed by the `COPILOT_BIBLE.md`. All developers must adhere to its specifications for:
+- State machine transitions (`idle` -> `live`).
+- AES-256-GCM secret encryption at rest.
+- Sequential monorepo rollouts.
 
-**Automatic One-Liner (Native Binary + VS Code Extension)**
+## 5. Security & Redaction Rules
+Lumen maintains a strict zero-trust posture toward credentials:
+- **Redaction:** Logs stored in the database are automatically stripped of API keys and bearer tokens.
+- **SSRF protection:** Scanners are restricted to GitHub/GitLab domains only.
+- **Hardware-bound keys:** CLI tokens are encrypted using a hash of the local machine's unique hardware ID.
+
+## 6. Monorepo Orchestration
+Lumen natively supports multi-directory projects. Define multiple `deploy` blocks in your `.lumen` config. The runner executes them sequentially, ensuring dependencies (like a database or backend) are healthy before launching dependents.
+
+## 7. AI Copilot Chat & Memory
+The Copilot sidebar uses a sliding context window (Section 11.2 of the Bible):
+- Retains 10-message short-term memory.
+- Auto-truncates based on token limits.
+- Context-aware regarding your current deployment status and build errors.
+
+## 8. Development & Contribution
 ```bash
-curl -fsSL https://lumen-platform.vercel.app/install.sh | sh
+# Backend
+cd backend && npm run dev
+
+# Website
+cd website && npm run dev
+
+# Testing
+cd backend && npm test
 ```
 
-**Clone from Source**
-```bash
-git clone https://github.com/mal4crypt/lumen-platform.git
-cd lumen-platform && ./install.sh --build-all
-```
+## 9. Troubleshooting & Recovery
+If a deployment fails:
+1. Run `lumen deploy diagnose` to trigger a Gemini-powered log audit.
+2. Review the `ROOT CAUSE` suggested by the AI.
+3. Use `lumen deploy config --edit` to apply the fix and re-push.
+
+## 10. API Specification
+- **`POST /copilot/scan`**: Trigger AI repo analysis.
+- **`POST /copilot/deploy/:id`**: Start cloud build.
+- **`GET /copilot/session/:id`**: Fetch real-time status and logs.
+- **`PUT /copilot/integrations`**: Manage encrypted cloud credentials.
+
+## 11. Deployment Strategy
+Lumen is deployed via PM2 and Turbopack. Production migrations are handled via `npx prisma db push` to ensure the Registry-v2 schema remains synchronized with the Operational Bible.
 
 ---
-
-## 💼 The Portfolio Pitch (Freelance)
-
-*Lumen represents the next generation of developer tooling. Built for speed and security, it solves the most common bottleneck in software engineering: the gap between "it works on my machine" and "it's live in the cloud". By integrating AI into the heart of the deployment lifecycle, Lumen enables teams to deploy production-ready services with 70% less manual configuration.*
-
-**Interested in building with Lumen? Join our Discord or check out the [Lumen Documentation](https://lumen-platform.vercel.app/docs).**
-
----
-
-MIT © 2026 [mal4crypt](https://github.com/mal4crypt)
+*Built for the next generation of cloud developers.*

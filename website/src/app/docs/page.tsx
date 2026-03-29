@@ -1,8 +1,10 @@
 "use client";
 import React from 'react';
-import { BookOpen, Terminal, Box, Cloud, Code } from 'lucide-react';
+import { BookOpen, Terminal, Box, Cloud, Code, HelpCircle } from 'lucide-react';
+import HelpModal from '@/components/HelpModal';
 
 export default function DocsPage() {
+    const [isHelpModalOpen, setIsHelpModalOpen] = React.useState(false);
     return (
         <div className="min-h-screen bg-[#0d1117] text-[#c9d1d9] font-sans selection:bg-[#388bfd33]">
             {/* Header */}
@@ -17,6 +19,12 @@ export default function DocsPage() {
                         <a href="/play" className="hover:text-blue-400 transition-colors">Playground</a>
                         <a href="/docs" className="text-blue-400">Docs</a>
                         <a href="https://github.com/malcryptt/lumen-platform" className="hover:text-blue-400 transition-colors">GitHub</a>
+                        <button
+                            onClick={() => setIsHelpModalOpen(true)}
+                            className="hover:text-blue-400 transition-colors flex items-center gap-1.5"
+                        >
+                            <HelpCircle size={14} /> Help
+                        </button>
                     </nav>
                 </div>
             </header>
@@ -103,6 +111,10 @@ export default function DocsPage() {
                     <p className="text-[#8b949e] text-sm">© 2026 Lumen Programming Language Platform. Built for the modern web.</p>
                 </div>
             </footer>
+            <HelpModal
+                isOpen={isHelpModalOpen}
+                onClose={() => setIsHelpModalOpen(false)}
+            />
         </div>
     );
 }

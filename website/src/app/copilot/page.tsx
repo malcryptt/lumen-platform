@@ -12,8 +12,10 @@ import {
     ChevronRight,
     CheckCircle2,
     AlertTriangle,
-    Github
+    Github,
+    HelpCircle
 } from "lucide-react";
+import HelpModal from "@/components/HelpModal";
 
 export default function CopilotPage() {
     const [repoUrl, setRepoUrl] = useState("");
@@ -22,6 +24,7 @@ export default function CopilotPage() {
     const [scanResult, setScanResult] = useState<any>(null);
     const [lumenConfig, setLumenConfig] = useState<string>("");
     const [status, setStatus] = useState<string>("idle"); // idle, scanning, config_ready, deploying, live, failed
+    const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
 
     const handleScan = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -80,6 +83,12 @@ export default function CopilotPage() {
                         <p className="text-zinc-400 mt-2">AI-Powered Cloud Deployment Assistant</p>
                     </div>
                     <div className="flex gap-4">
+                        <button
+                            onClick={() => setIsHelpModalOpen(true)}
+                            className="flex items-center gap-2 px-4 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-sm hover:bg-zinc-800 transition-all text-zinc-400 hover:text-white"
+                        >
+                            <HelpCircle size={18} /> Help
+                        </button>
                         <button className="flex items-center gap-2 px-4 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-sm hover:bg-zinc-800 transition-all">
                             <Settings size={18} /> Settings
                         </button>
@@ -225,6 +234,7 @@ export default function CopilotPage() {
                     </div>
                 )}
             </main>
+            <HelpModal isOpen={isHelpModalOpen} onClose={() => setIsHelpModalOpen(false)} />
         </div>
     );
 }

@@ -8,7 +8,7 @@ struct Config {
   std::string shell_prompt = "lumen> ";
   int history_size = 10000;
   bool jit_enabled = true;
-  std::string registry_url = "https://packages.lumen-lang.org";
+  std::string registry_url = "https://lumen-platform-beta.vercel.app/packages";
 };
 
 class ConfigurationManager {

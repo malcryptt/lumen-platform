@@ -2,7 +2,7 @@
 set -e
 
 # Lumen Platform Universal Installer
-# Usage: curl -fsSL https://lumen-lang.org/install.sh | sh
+# Usage: curl -fsSL https://lumen-platform-beta.vercel.app/install.sh | sh
 
 echo -e "\033[35m"
 echo "   _                     "
@@ -27,11 +27,22 @@ INSTALL_DIR="$HOME/.lumen"
 mkdir -p "$INSTALL_DIR/bin"
 
 # Real binary download from GitHub Releases
-echo "── Downloading binary for $PLATFORM-$ARCH..."
-curl -L "https://github.com/malcryptt/lumen-platform/releases/latest/download/lumen-$PLATFORM-$ARCH" -o "$INSTALL_DIR/bin/lumen"
+echo "── Detecting binary for $PLATFORM-$ARCH..."
 
-if [ ! -f "$INSTALL_DIR/bin/lumen" ]; then
-    echo "Error: Binary download failed. Please check your internet connection or GitHub status."
+# Map ARCH to artifact naming in workflow
+case "$ARCH" in
+    x86_64)  DL_ARCH="x86_64" ;;
+    arm64|aarch64) DL_ARCH="arm64" ;;
+    *)       DL_ARCH="$ARCH" ;;
+esac
+
+BINARY_NAME="lumen-$PLATFORM-$DL_ARCH"
+# GitHub Release artifacts are flat files
+echo "── Downloading $BINARY_NAME from latest release..."
+curl -L "https://github.com/malcryptt/lumen-platform/releases/latest/download/$BINARY_NAME" -o "$INSTALL_DIR/bin/lumen"
+
+if [ ! -f "$INSTALL_DIR/bin/lumen" ] || [ ! -s "$INSTALL_DIR/bin/lumen" ]; then
+    echo "Error: Binary download failed or file is empty. Please check: https://github.com/malcryptt/lumen-platform/releases"
     exit 1
 fi
 

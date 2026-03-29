@@ -8,6 +8,8 @@ const envSchema = z.object({
     GEMINI_API_KEY: z.string().optional(),
     GROQ_API_KEY: z.string().optional(),
     RENDER_API_KEY: z.string().optional(),
+    GITHUB_CLIENT_ID: z.string().optional(),
+    GITHUB_CLIENT_SECRET: z.string().optional(),
     PORT: z.string().default('3001'),
 });
 
@@ -22,5 +24,7 @@ export const config = _env.success ? _env.data : {
     GEMINI_API_KEY: process.env.GEMINI_API_KEY || '',
     GROQ_API_KEY: process.env.GROQ_API_KEY || '',
     RENDER_API_KEY: process.env.RENDER_API_KEY || '',
+    GITHUB_CLIENT_ID: process.env.GITHUB_CLIENT_ID || '',
+    GITHUB_CLIENT_SECRET: process.env.GITHUB_CLIENT_SECRET || '',
     PORT: process.env.PORT || '3001',
 };

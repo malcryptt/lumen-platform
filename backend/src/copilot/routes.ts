@@ -10,6 +10,8 @@ import { encryptForStorage, decryptFromStorage } from './deployer/secrets.js';
 import { acquireSlot, releaseSlot, getQuotaStatus } from '../middleware/rateLimit.js';
 import { runGeminiWithFallback } from './agent/fallback.js';
 import { config as appConfig } from '../config.js';
+import { validateGitUrl } from './security/ssrf.js';
+import { sanitizeSecretKey } from './security/sanitize.js';
 
 const prisma = new PrismaClient();
 const scanner = new RepoScanner();
@@ -41,6 +43,10 @@ export async function copilotRoutes(fastify: FastifyInstance) {
 
         const user = getUser(request);
         const { repoUrl, isPrivate } = parseResult.data;
+
+        if (!validateGitUrl(repoUrl)) {
+            return reply.code(400).send({ error: 'Invalid repository URL. Must be a valid GitHub or GitLab repository.' });
+        }
 
         // Rate limit check
         const rl = acquireSlot(user.id);
@@ -104,7 +110,10 @@ export async function copilotRoutes(fastify: FastifyInstance) {
 
         const session = await prisma.deploySession.findUnique({
             where: { id },
-            include: { logs: { orderBy: { timestamp: 'desc' }, take: 50 } }
+            include: {
+                logs: { orderBy: { timestamp: 'desc' }, take: 50 },
+                serviceStatuses: { orderBy: { deployOrder: 'asc' } }
+            }
         });
 
         if (!session) return reply.code(404).send({ error: 'Session not found' });
@@ -136,12 +145,19 @@ export async function copilotRoutes(fastify: FastifyInstance) {
             try { return JSON.parse(session.lumenConfig!); } catch { return null; }
         })() : null;
 
+        const history = await prisma.deployConfigHistory.findMany({
+            where: { sessionId: id },
+            orderBy: { version: 'desc' },
+            select: { version: true, source: true, createdAt: true }
+        });
+
         return {
             id: session.id,
             lumenConfig: session.lumenConfig,
             configText: configObj ? configToText(configObj) : session.lumenConfig,
             status: session.status,
-            validation: configObj ? validateLumenConfig(configObj) : null
+            validation: configObj ? validateLumenConfig(configObj) : null,
+            history
         };
     });
 
@@ -149,20 +165,65 @@ export async function copilotRoutes(fastify: FastifyInstance) {
     fastify.put('/config/:id', async (request: FastifyRequest, reply: FastifyReply) => {
         const { id } = request.params as { id: string };
         const user = getUser(request);
-        const { lumenConfig } = request.body as { lumenConfig: string };
-
-        if (!lumenConfig) return reply.code(400).send({ error: 'lumenConfig is required' });
+        const { lumenConfig, rollback_to_version } = request.body as { lumenConfig?: string, rollback_to_version?: number };
 
         const session = await prisma.deploySession.findUnique({ where: { id } });
         if (!session) return reply.code(404).send({ error: 'Session not found' });
         if (session.userId !== user.id) return reply.code(403).send({ error: 'Forbidden' });
 
+        if (session.status === DeployStatus.deploying) {
+            return reply.code(409).send({ error: 'Cannot update or roll back config while a deploy is in progress' });
+        }
+
+        let finalConfig = lumenConfig;
+
+        if (rollback_to_version) {
+            const historyItem = await prisma.deployConfigHistory.findFirst({
+                where: { sessionId: id, version: rollback_to_version }
+            });
+            if (!historyItem) return reply.code(404).send({ error: 'History version not found' });
+            finalConfig = historyItem.configText;
+        }
+
+        if (!finalConfig) return reply.code(400).send({ error: 'lumenConfig or rollback_to_version is required' });
+
         const updated = await prisma.deploySession.update({
             where: { id },
-            data: { lumenConfig, status: DeployStatus.config_ready }
+            data: { lumenConfig: finalConfig, status: DeployStatus.config_ready }
+        });
+
+        // Track History
+        const currentCount = await prisma.deployConfigHistory.count({ where: { sessionId: id } });
+        await prisma.deployConfigHistory.create({
+            data: {
+                sessionId: id,
+                version: currentCount + 1,
+                configText: finalConfig,
+                source: rollback_to_version ? 'rollback' : 'user_edit'
+            }
         });
 
         return { id: updated.id, lumenConfig: updated.lumenConfig, message: 'Config updated.' };
+    });
+
+    // ─── PUT /copilot/session/:id/scan-overrides ──────────────────────────
+    fastify.put('/session/:id/scan-overrides', async (request: FastifyRequest, reply: FastifyReply) => {
+        const { id } = request.params as { id: string };
+        const user = getUser(request);
+        const overrides = request.body as any;
+
+        const session = await prisma.deploySession.findUnique({ where: { id } });
+        if (!session) return reply.code(404).send({ error: 'Session not found' });
+        if (session.userId !== user.id) return reply.code(403).send({ error: 'Forbidden' });
+
+        const newResult = { ...(session.scanResult as object || {}), ...overrides };
+
+        const updated = await prisma.deploySession.update({
+            where: { id },
+            data: { scanResult: newResult }
+        });
+
+        return { id: updated.id, message: 'Scan result overridden successfully' };
     });
 
     // ─── POST /copilot/deploy/:id ─────────────────────────────────────────
@@ -301,7 +362,14 @@ Be concise and actionable. Format your response as:
         if (!session) return reply.code(404).send({ error: 'Session not found' });
         if (session.userId !== user.id) return reply.code(403).send({ error: 'Forbidden' });
 
-        const { keyName, value } = parseResult.data;
+        let keyName, value;
+        try {
+            keyName = sanitizeSecretKey(parseResult.data.keyName);
+            value = parseResult.data.value;
+        } catch (err: any) {
+            return reply.code(400).send({ error: err.message });
+        }
+
         const encrypted = encryptForStorage(value);
 
         await prisma.deploySecret.upsert({
@@ -327,6 +395,58 @@ Be concise and actionable. Format your response as:
         });
 
         return { deleted: true, keyName: key };
+    });
+
+    // ─── GET /copilot/integrations ────────────────────────────────────────
+    fastify.get('/integrations', async (request: FastifyRequest) => {
+        const user = getUser(request);
+        const integration = await prisma.userIntegration.findUnique({ where: { userId: user.id } });
+
+        return {
+            hasRenderKey: !!integration?.renderKeyEnc,
+            hasGithubToken: !!integration?.githubTokenEnc,
+            githubLogin: integration ? "Connected User" : null // Simulating connected state
+        };
+    });
+
+    // ─── PUT /copilot/integrations ───────────────────────────────────────────
+    fastify.put('/integrations', async (request: FastifyRequest, reply: FastifyReply) => {
+        const user = getUser(request);
+        const { renderApiKey, githubToken } = request.body as { renderApiKey?: string, githubToken?: string };
+
+        let updateData: any = {};
+
+        if (renderApiKey) {
+            const encrypted = encryptForStorage(renderApiKey);
+            updateData.renderKeyEnc = encrypted.valueEnc;
+            updateData.renderKeyIv = encrypted.iv;
+        }
+
+        if (githubToken) {
+            const encrypted = encryptForStorage(githubToken);
+            updateData.githubTokenEnc = encrypted.valueEnc;
+            updateData.githubTokenIv = encrypted.iv;
+        }
+
+        if (Object.keys(updateData).length > 0) {
+            await prisma.userIntegration.upsert({
+                where: { userId: user.id },
+                create: { userId: user.id, ...updateData },
+                update: updateData
+            });
+        }
+
+        return { success: true, message: 'Integrations updated.' };
+    });
+
+    // ─── DELETE /copilot/integrations/github ──────────────────────────────
+    fastify.delete('/integrations/github', async (request: FastifyRequest) => {
+        const user = getUser(request);
+        await prisma.userIntegration.update({
+            where: { userId: user.id },
+            data: { githubTokenEnc: null, githubTokenIv: null }
+        });
+        return { success: true, message: 'GitHub disconnected.' };
     });
 
     // ─── GET /copilot/quota ───────────────────────────────────────────────

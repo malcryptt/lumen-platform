@@ -1,10 +1,12 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { Package, Search, Download, Clock, User, ArrowRight } from 'lucide-react';
+import { Package, Search, Download, Clock, User, ArrowRight, HelpCircle } from 'lucide-react';
+import HelpModal from '@/components/HelpModal';
 
 export default function PackagesPage() {
     const [packages, setPackages] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
 
     useEffect(() => {
         const fetchPackages = async () => {
@@ -45,6 +47,12 @@ export default function PackagesPage() {
                         <a href="/play" className="hover:text-white transition-colors">Playground</a>
                         <button className="bg-[#238636] hover:bg-[#2ea043] text-white px-4 py-1.5 rounded-md font-bold transition-all text-xs">
                             Publish
+                        </button>
+                        <button
+                            onClick={() => setIsHelpModalOpen(true)}
+                            className="hover:text-blue-400 transition-colors flex items-center gap-1.5 text-sm font-medium"
+                        >
+                            <HelpCircle size={14} /> Help
                         </button>
                     </nav>
                 </div>
@@ -114,6 +122,10 @@ export default function PackagesPage() {
                     <p className="text-[#8b949e] text-sm">© 2026 Lumen Unified Registry. Secured and Distributed.</p>
                 </div>
             </footer>
+            <HelpModal
+                isOpen={isHelpModalOpen}
+                onClose={() => setIsHelpModalOpen(false)}
+            />
         </div>
     );
 }

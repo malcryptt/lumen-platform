@@ -9,11 +9,12 @@
 
 namespace lumen::shell {
 
-const char *BANNER = "  \033[35m _                     \033[0m\n"
-                     "  \033[35m| | _  _ _ __  ___ _ _ \033[0m\n"
-                     "  \033[35m| || || | '  \\/ -_) ' \\\033[0m\n"
-                     "  \033[35m|_|\\_,_|_|_|_|\\___|_||_|\033[0m\n"
-                     "  v2.0.0  |  lumen-lang.org  |  :help for commands\n";
+const char *BANNER =
+    "  \033[35m _                     \033[0m\n"
+    "  \033[35m| | _  _ _ __  ___ _ _ \033[0m\n"
+    "  \033[35m| || || | '  \\/ -_) ' \\\033[0m\n"
+    "  \033[35m|_|\\_,_|_|_|_|\\___|_||_|\033[0m\n"
+    "  v2.0.0  |  lumen-platform-beta.vercel.app  |  :help for commands\n";
 
 std::string get_history_path() {
   const char *home = getenv("HOME");
@@ -143,7 +144,8 @@ void start_repl() {
               << "  Makes a GET request to the given URL.\n"
               << "  Options: headers, timeout, follow_redirects, verify_ssl\n"
               << "  Example: http.get(\"https://api.example.com/data\")\n"
-              << "  See: lumen-lang.org/docs/stdlib/http" << std::endl;
+              << "  See: lumen-platform-beta.vercel.app/docs/stdlib/http"
+              << std::endl;
         } else {
           std::cout << "No documentation found for: " << topic << std::endl;
         }

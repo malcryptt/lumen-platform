@@ -39,6 +39,7 @@ model User {
   cliTokenExpiry DateTime?
   deploySessions DeploySession[]
   integration    UserIntegration?
+  aiBudget       UserAiBudget?
   createdAt      DateTime         @default(now())
 }
 
@@ -47,6 +48,7 @@ enum DeployStatus {
   idle
   scanning
   scan_failed
+  awaiting_oauth
   config_ready
   deploying
   deploy_failed
@@ -68,6 +70,7 @@ model DeploySession {
   repoPrivate     Boolean         @default(false)
   scanResult      Json?
   lumenConfig     String?
+  needsReview     Boolean         @default(false)
   renderServiceId String?
   renderServiceUrl String?
   status          DeployStatus    @default(idle)
@@ -75,6 +78,10 @@ model DeploySession {
   retryCount      Int             @default(0)
   logs            DeployLog[]
   secrets         DeploySecret[]
+  configHistory   DeployConfigHistory[]
+  serviceStatuses DeployServiceStatus[]
+  events          DeployEvent[]
+  chatMessages    ChatMessage[]
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 }
@@ -112,4 +119,72 @@ model UserIntegration {
   githubTokenIv    String?
   githubLogin      String?  // GitHub username (plain)
   updatedAt        DateTime @updatedAt
+}
+
+enum ConfigSource {
+  gemini_generate
+  gemini_fix
+  user_edit
+  rollback
+}
+
+model DeployConfigHistory {
+  id          String        @id @default(uuid())
+  sessionId   String
+  session     DeploySession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  version     Int
+  configText  String
+  source      ConfigSource
+  createdAt   DateTime      @default(now())
+}
+
+enum ServiceStatus {
+  pending
+  deploying
+  live
+  failed
+}
+
+model DeployServiceStatus {
+  id                String        @id @default(uuid())
+  sessionId         String
+  session           DeploySession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  serviceName       String
+  serviceRoot       String
+  renderServiceId   String?
+  status            ServiceStatus @default(pending)
+  error             String?
+  deployOrder       Int
+}
+
+model DeployEvent {
+  id          BigInt        @id @default(autoincrement())
+  sessionId   String
+  session     DeploySession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  eventType   String
+  payload     Json?
+  createdAt   DateTime      @default(now())
+}
+
+enum ChatRole {
+  user
+  assistant
+}
+
+model ChatMessage {
+  id          String        @id @default(uuid())
+  sessionId   String
+  session     DeploySession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  role        ChatRole
+  content     String
+  createdAt   DateTime      @default(now())
+}
+
+model UserAiBudget {
+  id                String   @id @default(uuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dailyGeminiCalls  Int      @default(0)
+  budgetLimit       Int      @default(20)
+  resetAt           DateTime @db.Date
 }

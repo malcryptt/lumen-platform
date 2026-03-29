@@ -66,7 +66,17 @@ cmake .. && make
 3.  Press `F5` to launch the extension in a Development Host.
 4.  Run command `Lumen: Ask Copilot` to open the AI assistant.
 
-## 💼 The Pitch: Professional Grade Tooling
+## 🧪 Phase 4: Security Audit & Testing
+Run the Lumen Security Regression Suite to ensure your environment is Beta-ready:
+```bash
+cd backend && npm test
+```
+This validates:
+- [x] SSRF exclusion of local/internal network interfaces.
+- [x] AES-256 integrity for Render credentials.
+- [x] Context-window sliding limit for Copilot history.
+
+## 💼 Phase 5: Managed Deployment
 Lumen is no longer just a language; it's a full-stack ecosystem. By solving the "First Mile" of deployment using AI, Lumen eliminates the friction of cloud provisioning. 
 
 **"Write once, Deploy everywhere (with AI help)."**
