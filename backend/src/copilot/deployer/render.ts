@@ -28,20 +28,26 @@ export class RenderClient {
         runtime: string,
         buildCommand: string,
         startCommand: string,
-        envVars: Record<string, string>
+        envVars: Record<string, string>,
+        port?: number,
+        plan?: string,
+        region?: string
     }) {
         const payload = {
             type: "web_service",
             name: config.name,
             repo: config.repoUrl,
-            env: config.runtime === "node" ? "node" : "docker", // Simplified mapping
+            env: config.runtime === "node" ? "node" : "docker",
+            region: config.region || "oregon",
             serviceDetails: {
                 buildCommand: config.buildCommand,
                 startCommand: config.startCommand,
+                plan: config.plan || "free",
                 envVars: Object.entries(config.envVars).map(([key, value]) => ({
                     key,
                     value
-                }))
+                })),
+                port: config.port || 3000
             }
         };
 

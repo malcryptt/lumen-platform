@@ -31,9 +31,9 @@ services:
       - POSTGRES_PASSWORD=lumen
       - POSTGRES_DB=lumen_registry
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
-      - postgres_data:/var/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
 
 volumes:
   postgres_data:

@@ -1,64 +1,64 @@
-import Groq from "groq-sdk";
 import { config } from "../../config.js";
+import { runGroqWithFallback } from "./fallback.js";
 
-const SYSTEM_PROMPT = `You are Lumen Copilot — an expert AI assistant for the Lumen programming language.
+const SYSTEM_PROMPT = `You are Lumen Copilot v2 — a premium AI assistant for the Lumen platform.
 
 Lumen is a fast, secure, multipurpose compiled language with syntax similar to Lua/Rust hybrid.
 Key facts about Lumen:
 - Comments use --
 - Functions: fn name(args) { ... }
-- Variables: let x = 5 or val x = 5 (immutable)
+- Variables: let x = 5 (mutable), val x = 5 (immutable)
 - Loops: for i in 1..10 { } and while cond { }
 - Strings: "hello {name}" (interpolation with {})
 - Types: Int, Float, String, Bool, List, Map, bytes, Result, Option
 - Imports: import net, import time, import crypto
-- Classes: class Foo { pub fn new() { } }
+- Classes: class Foo { pub fn new(x: Int) { self.x = x } }
 - Error handling: try { } catch e { }
-- It has built-in net, time, crypto, async, and tensor modules
+- Built-in modules: net, time, crypto, async, tensor, json, fs
 
-When asked for code, always wrap it in \`\`\`lumen ... \`\`\` blocks.
-When the state includes editorContext, analyze that code before answering.
-Be concise, technically accurate, and friendly. Help with:
-1. Writing and explaining Lumen code
-2. Debugging errors
-3. Deployment configuration with .lumen files
-4. Performance and best practices
+As a v2 assistant, you excel at:
+1. Writing production-grade Lumen code (always wrap in \`\`\`lumen ... \`\`\` blocks).
+2. Explaining the v2 deploy architecture (.lumen config, state machine, Render integration).
+3. Analyzing "editor context" (code selected in VS Code) to provide targeted fixes.
+4. Using AES-256-GCM encrypted secrets for secure deployments.
+5. Diagnosing deployment failures using the new state machine statuses.
+
+Be concise, technically deep, and premium. When provided with editorContext, fix the specific bug in the code.
 `;
 
 /**
- * ChatAgent - Code & deployment assistant using Groq (Llama 4 Scout).
+ * ChatAgent - Premium code & deployment assistant using Groq with fallback chain.
  */
 export class ChatAgent {
-    private groq: Groq;
-
-    constructor() {
-        this.groq = new Groq({
-            apiKey: config.GROQ_API_KEY || "",
-        });
-    }
-
     /**
-     * Generates a contextual response.
+     * Generates a contextual response with fallback resilience.
      * @param message User's message
      * @param state Optional context (selected code, deploy session state, etc.)
      */
     async chat(message: string, state: any = {}) {
-        const userContent = state.editorContext
-            ? `Context (selected code):\n\`\`\`\n${state.editorContext}\n\`\`\`\n\nUser question: ${message}`
-            : state && Object.keys(state).length > 0
-                ? `Deploy session state:\n${JSON.stringify(state, null, 2)}\n\nUser said: "${message}"`
-                : message;
+        const messages: { role: 'system' | 'user' | 'assistant'; content: string }[] = [
+            { role: "system", content: SYSTEM_PROMPT }
+        ];
 
-        const chatCompletion = await this.groq.chat.completions.create({
-            messages: [
-                { role: "system", content: SYSTEM_PROMPT },
-                { role: "user", content: userContent }
-            ],
-            model: "meta-llama/llama-4-scout-17b-16e-instruct",
-            temperature: 0.7,
-            max_tokens: 1024,
-        });
+        // Inject context
+        let userContent = message;
+        if (state.editorContext) {
+            userContent = `[Editor Context - Selected Code]:\n\`\`\`lumen\n${state.editorContext}\n\`\`\`\n\n[User's Question/Request]: ${message}`;
+        } else if (state.sessionId || state.status) {
+            userContent = `[Deploy Session Context]:\n${JSON.stringify(state, null, 2)}\n\n[User's Request]: ${message}`;
+        }
 
-        return chatCompletion.choices[0]?.message?.content || "I'm having trouble connecting to my brain right now.";
+        messages.push({ role: "user", content: userContent });
+
+        try {
+            return await runGroqWithFallback(
+                config.GROQ_API_KEY || "",
+                config.GEMINI_API_KEY || "",
+                messages
+            );
+        } catch (err: any) {
+            console.error('[ChatAgent] Chat failed after fallback chain:', err.message);
+            return `I'm deeply sorry, but I've encountered a temporary neural outage. (Technical details: ${err.message})`;
+        }
     }
 }

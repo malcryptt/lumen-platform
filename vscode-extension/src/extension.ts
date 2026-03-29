@@ -80,7 +80,7 @@ export function activate(context: vscode.ExtensionContext) {
                     switch (message.command) {
                         case 'askAI':
                             try {
-                                const response = await fetch('http://localhost:3001/ai/chat', {
+                                const response = await fetch('http://localhost:3005/ai/chat', {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({ message: message.text, context: message.context })

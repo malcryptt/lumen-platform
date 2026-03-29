@@ -11,7 +11,7 @@ model Package {
   id          String    @id @default(uuid())
   name        String    @unique
   description String?
-  owner       String    // GitHub username or ID
+  owner       String
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   versions    Version[]
@@ -19,30 +19,39 @@ model Package {
 
 model Version {
   id        String   @id @default(uuid())
-  version   String   // semver
+  version   String
   packageId String
   package   Package  @relation(fields: [packageId], references: [id])
-  tarball   String   // S3 URL
-  checksum  String   // SHA-256
+  tarball   String
+  checksum  String
   createdAt DateTime @default(now())
 
   @@unique([packageId, version])
 }
 
 model User {
-  id             String          @id @default(uuid())
-  username       String          @unique
-  apiKey         String          @unique
+  id             String           @id @default(uuid())
+  username       String           @unique
+  email          String?          @unique
+  passwordHash   String?
+  apiKey         String           @unique
+  cliToken       String?          @unique
+  cliTokenExpiry DateTime?
   deploySessions DeploySession[]
-  createdAt      DateTime        @default(now())
+  integration    UserIntegration?
+  createdAt      DateTime         @default(now())
 }
 
+// v2: Extended deploy status state machine
 enum DeployStatus {
+  idle
   scanning
+  scan_failed
   config_ready
   deploying
+  deploy_failed
+  diagnosing
   live
-  failed
 }
 
 enum LogLevel {
@@ -52,24 +61,55 @@ enum LogLevel {
 }
 
 model DeploySession {
-  id              String       @id @default(uuid())
+  id              String          @id @default(uuid())
   userId          String
-  user            User         @relation(fields: [userId], references: [id])
+  user            User            @relation(fields: [userId], references: [id])
   repoUrl         String?
-  scanResult      Json? // Raw Gemini scanner output
-  lumenConfig     String? // Generated .lumen config string
-  renderServiceId String? // Render service ID once deployed
-  status          DeployStatus @default(scanning)
+  repoPrivate     Boolean         @default(false)
+  scanResult      Json?
+  lumenConfig     String?
+  renderServiceId String?
+  renderServiceUrl String?
+  status          DeployStatus    @default(idle)
+  diagnosis       String?
+  retryCount      Int             @default(0)
   logs            DeployLog[]
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  secrets         DeploySecret[]
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
 }
 
 model DeployLog {
   id        String        @id @default(uuid())
   sessionId String
-  session   DeploySession @relation(fields: [sessionId], references: [id])
+  session   DeploySession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   line      String
   level     LogLevel      @default(info)
   timestamp DateTime      @default(now())
+}
+
+// v2: Encrypted secrets per deploy session
+model DeploySecret {
+  id        String        @id @default(uuid())
+  sessionId String
+  session   DeploySession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  keyName   String
+  valueEnc  String        // AES-256-GCM encrypted value
+  iv        String        // Initialization vector
+  createdAt DateTime      @default(now())
+
+  @@unique([sessionId, keyName])
+}
+
+// v2: Per-user integrations (Render key, GitHub OAuth)
+model UserIntegration {
+  id               String   @id @default(uuid())
+  userId           String   @unique
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  renderKeyEnc     String?  // AES-256 encrypted Render API key
+  renderKeyIv      String?
+  githubTokenEnc   String?  // AES-256 encrypted GitHub OAuth token
+  githubTokenIv    String?
+  githubLogin      String?  // GitHub username (plain)
+  updatedAt        DateTime @updatedAt
 }
