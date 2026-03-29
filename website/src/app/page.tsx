@@ -69,9 +69,7 @@ print("Result: " .. ts.to_string(result))`
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-10">
             <Link href="/" className="flex items-center gap-2 group">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center group-hover:rotate-12 transition-transform shadow-lg shadow-cyan-500/20">
-                <div className="w-4 h-4 bg-white rounded-full" />
-              </div>
+              <img src="/logo.png" alt="Lumen Logo" className="w-8 h-8 object-contain group-hover:scale-110 transition-transform drop-shadow-md" />
               <span className="text-xl font-black text-white tracking-tighter uppercase italic">Lumen</span>
             </Link>
             <div className="hidden lg:flex items-center gap-8 text-[13px] font-semibold tracking-wide uppercase text-[#8b949e]">
@@ -176,7 +174,7 @@ print("Result: " .. ts.to_string(result))`
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-cyan-500 text-black px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter">Collapsed by Lumen</div>
               </div>
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-xl bg-gradient-to-tr from-cyan-400 to-blue-600 flex items-center justify-center text-white font-black italic shadow-2xl shadow-cyan-500/20">L</div>
+                <img src="/logo.png" alt="Lumen Logo" className="w-16 h-16 object-contain drop-shadow-[0_10px_15px_rgba(6,182,212,0.2)]" />
                 <div className="space-y-1">
                   <div className="text-white font-bold tracking-tight">One toolchain. One mental model.</div>
                   <div className="text-sm text-cyan-400">Integrated Everywhere</div>
@@ -465,9 +463,7 @@ print("Result: " .. ts.to_string(result))`
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-12 mb-20">
             <div className="col-span-full lg:col-span-2 space-y-8">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
-                  <div className="w-4 h-4 bg-white rounded-full" />
-                </div>
+                <img src="/logo.png" alt="Lumen Logo" className="w-8 h-8 object-contain drop-shadow-md" />
                 <span className="text-xl font-black text-white tracking-tighter uppercase italic">Lumen</span>
               </div>
               <p className="text-sm text-[#8b949e] font-medium max-w-xs leading-relaxed">
