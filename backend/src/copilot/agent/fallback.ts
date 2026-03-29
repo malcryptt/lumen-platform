@@ -74,6 +74,13 @@ export async function runGroqWithFallback(
     geminiApiKey: string,
     messages: { role: 'system' | 'user' | 'assistant'; content: string }[]
 ): Promise<string> {
+    if (!groqApiKey) {
+        console.log('[Fallback] No Groq API key provided. Bypassing Groq and using Gemini directly for speed.');
+        const userMessage = messages.filter(m => m.role === 'user').pop()?.content || '';
+        const systemMsg = messages.find(m => m.role === 'system')?.content;
+        return runGeminiWithFallback(geminiApiKey, userMessage, systemMsg);
+    }
+
     const groq = new Groq({ apiKey: groqApiKey });
 
     async function tryGroqModel(model: string): Promise<string> {

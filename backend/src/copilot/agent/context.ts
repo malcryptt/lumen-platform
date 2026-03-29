@@ -1,4 +1,5 @@
 import { DeployStatus, PrismaClient } from '@prisma/client';
+import { LUMEN_KNOWLEDGE_DOC } from './knowledge.js';
 
 const prisma = new PrismaClient();
 
@@ -47,6 +48,10 @@ export async function buildChatContext(sessionId: string, history: ChatMessage[]
     You are direct, clear, and technical. You never make things up. If you do not know something, you say so. 
     You do not write code for the user unless asked. You focus on deployment, config, and infrastructure topics. 
     For any action that triggers a side effect (redeploy, apply a config fix), you always ask for explicit confirmation before proceeding.
+
+    --- LUMEN KNOWLEDGE DOCUMENT ---
+    ${LUMEN_KNOWLEDGE_DOC}
+    --------------------------------
 
     Current deployment session state:
     - Session ID: ${context.id}
