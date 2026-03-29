@@ -127,6 +127,9 @@ print("Result: " .. ts.to_string(result))`
             <Link href="/play" className="bg-[#161b22] text-white px-10 py-5 rounded-sm font-black uppercase tracking-tighter text-lg border border-white/5 hover:bg-[#21262d] hover:border-white/20 transition-all w-full sm:w-auto">
               Try the Web IDE
             </Link>
+            <Link href="/docs#quickstart" className="text-sm font-bold text-[#8b949e] hover:text-cyan-400 transition-colors uppercase tracking-widest flex items-center gap-2 px-4 py-2 mt-4 sm:mt-0 sm:ml-4">
+              Quick Start <ArrowRight size={16} />
+            </Link>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 max-w-3xl mx-auto pt-10 border-t border-white/5">
@@ -268,6 +271,12 @@ print("Result: " .. ts.to_string(result))`
                 </div>
               </div>
             </div>
+          </div>
+          
+          <div className="mt-12 text-right lg:pl-[33%] lg:ml-12">
+            <Link href="/docs" className="inline-flex items-center gap-2 text-[#8b949e] hover:text-cyan-400 transition-colors text-sm font-bold uppercase tracking-widest group">
+              Need help getting started? <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+            </Link>
           </div>
         </div>
       </section>
@@ -434,10 +443,6 @@ print("Result: " .. ts.to_string(result))`
                 <Link href="https://github.com" className="flex items-center gap-2 hover:text-white transition-colors"><Github size={20} /> GitHub</Link>
                 <span className="w-1.5 h-1.5 rounded-full bg-white/10" />
                 <Link href="https://discord.com" className="flex items-center gap-2 hover:text-white transition-colors text-blue-400 font-black"><Globe size={20} /> Discord</Link>
-                <span className="w-1.5 h-1.5 rounded-full bg-white/10" />
-                <Link href="/docs" className="flex items-center gap-2 hover:text-white transition-colors">Docs</Link>
-                <span className="w-1.5 h-1.5 rounded-full bg-white/10" />
-                <Link href="/packages" className="flex items-center gap-2 hover:text-white transition-colors">Packages</Link>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
